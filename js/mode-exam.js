@@ -182,6 +182,22 @@ const ExamMode = {
 
     submit() {
         const unanswered = this.questions.filter(q => !this.isAnswered(q));
+        if (unanswered.length > 0) {
+            const objectiveUnanswered = unanswered.filter(q => ['single', 'multiple', 'judgment'].includes(q.type));
+            const subjectiveUnanswered = unanswered.filter(q => !['single', 'multiple', 'judgment'].includes(q.type));
+
+            // 客观题未答的自动给0分（不进入比对）
+            objectiveUnanswered.forEach(q => {
+                this.answers[q.id] = q.type === 'multiple' ? [] : null;
+            });
+
+            // 如果有主观题未答，提示
+            if (subjectiveUnanswered.length > 0) {
+                if (!confirm(`还有 ${subjectiveUnanswered.length} 道主观题未作答，是否继续提交？`)) {
+                    return;
+                }
+            }
+        }
         this.stopTimer();
         this.submitted = true;
         this.currentIndex = 0;
@@ -190,6 +206,21 @@ const ExamMode = {
     },
 
     renderComparison() {
+        // 跳过客观题，直接显示主观题
+        while (this.currentIndex < this.questions.length) {
+            const q = this.questions[this.currentIndex];
+            if (!['single', 'multiple', 'judgment'].includes(q.type)) {
+                break;
+            }
+            this.currentIndex++;
+        }
+
+        // 如果所有题都是客观题，直接完成
+        if (this.currentIndex >= this.questions.length) {
+            this.finishComparison();
+            return;
+        }
+
         const q = this.questions[this.currentIndex];
         const total = this.questions.length;
         const current = this.currentIndex + 1;
@@ -199,30 +230,9 @@ const ExamMode = {
 
         const container = document.getElementById('exam-question-container');
         const userAnswer = this.answers[q.id] || null;
-        const isObjective = ['single', 'multiple', 'judgment'].includes(q.type);
 
         let html = '';
-        if (isObjective) {
-            const isCorrect = this.checkAnswer(q, userAnswer);
-            html = QuestionRender.render(q, {
-                mode: 'review',
-                userAnswer: userAnswer,
-                isCorrect: isCorrect,
-                context: 'exam'
-            });
-            let feedback = '';
-            if (isCorrect) {
-                feedback = `<div class="feedback-box correct"><div class="feedback-title">回答正确</div></div>`;
-            } else {
-                feedback = `<div class="feedback-box wrong"><div class="feedback-title">回答错误</div><div>正确答案：${this.formatAnswer(q)}</div></div>`;
-                // 客观题自动计入错题本
-                WrongBook.add(q, this.setInfo, userAnswer);
-            }
-            if (q.analysis) {
-                feedback += `<div class="analysis-box"><strong>解析：</strong>${QuestionRender.escapeHtml(q.analysis)}</div>`;
-            }
-            html += feedback;
-        } else if (q.type === 'fill') {
+        if (q.type === 'fill') {
             html = QuestionRender.render(q, {
                 mode: 'comparison',
                 userAnswer: userAnswer,
@@ -250,7 +260,17 @@ const ExamMode = {
         if (this.currentIndex > 0) {
             html += `<button class="btn-secondary" onclick="ExamMode.prevComparison()">上一题</button>`;
         }
-        if (this.currentIndex < total - 1) {
+
+        // 检查后面是否还有主观题
+        let hasNextSubjective = false;
+        for (let i = this.currentIndex + 1; i < this.questions.length; i++) {
+            if (!['single', 'multiple', 'judgment'].includes(this.questions[i].type)) {
+                hasNextSubjective = true;
+                break;
+            }
+        }
+
+        if (hasNextSubjective) {
             html += `<button class="btn-primary" onclick="ExamMode.nextComparison()">下一题</button>`;
         } else {
             html += `<button class="btn-primary" onclick="ExamMode.finishComparison()">完成比对，查看成绩</button>`;
@@ -294,18 +314,14 @@ const ExamMode = {
 
     nextComparison() {
         this.saveCurrentComparison();
-        if (this.currentIndex < this.questions.length - 1) {
-            this.currentIndex++;
-            this.renderComparison();
-        }
+        this.currentIndex++;
+        this.renderComparison();
     },
 
     prevComparison() {
         this.saveCurrentComparison();
-        if (this.currentIndex > 0) {
-            this.currentIndex--;
-            this.renderComparison();
-        }
+        this.currentIndex--;
+        this.renderComparison();
     },
 
     saveCurrentComparison() {
