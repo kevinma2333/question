@@ -257,16 +257,15 @@ const App = {
         questions.forEach((q, idx) => {
             const userAnswer = answers[q.id];
             const isObjective = ['single', 'multiple', 'judgment'].includes(q.type);
-            const isCorrect = isObjective ? this.checkAnswer(q, userAnswer) : null;
+
+            // 客观题自动判定，已在 showResult 中处理，比对界面只显示主观题
+            if (isObjective) return;
 
             html += `<div class="comparison-item" id="comp-${q.id}">`;
-            html += `<h4>第 ${idx + 1} 题 [${this.getTypeLabel(q.type)}] ${isCorrect === true ? '<span style="color:#10b981;">正确</span>' : isCorrect === false ? '<span style="color:#ef4444;">错误</span>' : '<span style="color:#f59e0b;">主观</span>'}</h4>`;
+            html += `<h4>第 ${idx + 1} 题 [${this.getTypeLabel(q.type)}]</h4>`;
             html += `<div style="margin-bottom:10px;color:#475569;">${QuestionRender.escapeHtml(q.question)}</div>`;
 
-            if (isObjective) {
-                html += `<div class="comparison-row"><div class="comparison-label">你的答案</div><div class="comparison-value user">${this.formatAnswerDisplay(q, userAnswer)}</div></div>`;
-                html += `<div class="comparison-row"><div class="comparison-label">正确答案</div><div class="comparison-value answer">${this.formatAnswerDisplay(q, q.answer)}</div></div>`;
-            } else if (q.type === 'fill') {
+            if (q.type === 'fill') {
                 const userVals = Array.isArray(userAnswer) ? userAnswer : [];
                 const correctVals = q.answer || [];
                 for (let i = 0; i < correctVals.length; i++) {
@@ -289,10 +288,20 @@ const App = {
             html += '</div>';
         });
 
-        html += `<div style="text-align:center;margin-top:24px;"><button class="btn-primary" onclick="App.showExamScore()" style="padding:14px 40px;font-size:18px;">查看成绩</button></div>`;
+        html += `<div style="text-align:center;margin-top:24px;"><button class="btn-primary" id="exam-score-btn" style="padding:14px 40px;font-size:18px;">查看成绩</button></div>`;
 
         container.innerHTML = html;
         container.scrollIntoView({ behavior: 'smooth' });
+
+        // 使用 setTimeout 确保 DOM 更新后再绑定事件
+        setTimeout(() => {
+            const btn = document.getElementById('exam-score-btn');
+            if (btn) {
+                btn.addEventListener('click', function() {
+                    App.showExamScore();
+                });
+            }
+        }, 10);
     },
 
     showExamScore() {
@@ -310,7 +319,9 @@ const App = {
             <div class="stat-card"><div class="stat-value">${mins}分${secs}秒</div><div class="stat-label">用时</div></div>
         `;
         document.getElementById('result-stats').innerHTML = statsHtml;
-    },
+    }
+
+,
 
     markExamBlank(questionId, blankIndex, checked) {
         if (!checked) {
