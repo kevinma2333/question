@@ -18,6 +18,7 @@ const ExamMode = {
         this.setInfo = App.setInfo;
         this.startTime = Date.now();
         this.submitted = false;
+        this.shuffle = true;
 
         App.switchView('exam-view');
         this.startTimer();
@@ -91,7 +92,8 @@ const ExamMode = {
             userAnswer: userAnswer,
             onAnswer: ['single', 'multiple', 'judgment'].includes(q.type)
                 ? 'ExamMode.handleObjectiveAnswer'
-                : 'ExamMode.handleSubjectiveInput'
+                : 'ExamMode.handleSubjectiveInput',
+            context: 'exam'
         });
 
         // 添加导航按钮
@@ -99,10 +101,10 @@ const ExamMode = {
         if (this.currentIndex > 0) {
             html += `<button class="btn-secondary" onclick="ExamMode.prev()">上一题</button>`;
         }
-        if (q.type === 'multiple') {
-            html += `<button class="btn-primary" onclick="ExamMode.submitMultiple()">提交并下一题</button>`;
-        } else if (this.currentIndex < total - 1) {
+        if (this.currentIndex < total - 1) {
             html += `<button class="btn-primary" onclick="ExamMode.next()">下一题</button>`;
+        } else {
+            html += `<button class="btn-primary" onclick="ExamMode.submit()">交卷</button>`;
         }
         html += '</div>';
 
@@ -114,6 +116,11 @@ const ExamMode = {
             inputs.forEach(input => {
                 input.addEventListener('input', () => this.handleSubjectiveInput());
             });
+        } else if (q.type === 'essay') {
+            const textarea = container.querySelector('.essay-textarea');
+            if (textarea) {
+                textarea.addEventListener('input', () => this.handleSubjectiveInput());
+            }
         }
 
         this.renderSidebar();
@@ -181,6 +188,26 @@ const ExamMode = {
 
         this.stopTimer();
         this.submitted = true;
+        const duration = Math.floor((Date.now() - this.startTime) / 1000);
+        this.saveHistory(duration);
         App.showResult(this.questions, this.answers, this.startTime);
+    },
+
+    saveHistory(duration) {
+        const record = {
+            id: 'rec-' + Date.now(),
+            timestamp: Date.now(),
+            mode: 'exam',
+            groupId: this.setInfo.groupId,
+            groupName: this.setInfo.groupName,
+            bankId: this.setInfo.bankId,
+            bankName: this.setInfo.bankName,
+            setId: this.setInfo.setId,
+            setName: this.setInfo.setName,
+            total: this.questions.length,
+            shuffle: true,
+            duration: duration
+        };
+        History.add(record);
     }
 };

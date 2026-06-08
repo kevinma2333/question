@@ -2,7 +2,8 @@ const Storage = {
     KEYS: {
         WRONG_BOOK: 'quiz_wrong_book',
         SETTINGS: 'quiz_settings',
-        EXAM_STATE: 'quiz_exam_state'
+        EXAM_STATE: 'quiz_exam_state',
+        HISTORY: 'quiz_history'
     },
 
     getWrongBook() {
@@ -31,12 +32,26 @@ const Storage = {
         localStorage.setItem(this.KEYS.SETTINGS, JSON.stringify(data));
     },
 
+    getHistory() {
+        try {
+            const data = localStorage.getItem(this.KEYS.HISTORY);
+            return data ? JSON.parse(data) : [];
+        } catch (e) {
+            return [];
+        }
+    },
+
+    setHistory(data) {
+        localStorage.setItem(this.KEYS.HISTORY, JSON.stringify(data));
+    },
+
     exportData() {
         const payload = {
             version: '1.0',
             exportTime: new Date().toISOString(),
             wrongBook: this.getWrongBook(),
-            settings: this.getSettings()
+            settings: this.getSettings(),
+            history: this.getHistory()
         };
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -63,8 +78,12 @@ const Storage = {
                 if (data.settings) {
                     this.setSettings(data.settings);
                 }
+                if (data.history) {
+                    this.setHistory(data.history);
+                }
                 App.showToast('存档已导入');
                 WrongBook.loadFilters();
+                History.loadFilters();
             } catch (err) {
                 App.showToast('文件格式错误');
             }

@@ -218,10 +218,16 @@ const App = {
         const elapsed = Math.floor((Date.now() - startTime) / 1000);
         const mins = Math.floor(elapsed / 60);
         const secs = elapsed % 60;
+        const score = Math.round((earnedPoints / totalPoints) * 100);
+
+        // 更新最近一条考试历史记录的分数
+        const history = Storage.getHistory();
+        if (history.length > 0 && history[0].mode === 'exam' && !history[0].score) {
+            history[0].score = score;
+            Storage.setHistory(history);
+        }
 
         this.switchView('result-view');
-
-        const score = Math.round((earnedPoints / totalPoints) * 100);
         document.getElementById('score-text').textContent = `${score}分`;
 
         const statsHtml = `
@@ -331,6 +337,14 @@ const App = {
         this.updateBreadcrumb();
         WrongBook.render();
         this.switchView('wrong-book-view');
+    },
+
+    // 练习记录
+    showHistory() {
+        this.navStack = [{ name: '练习记录', action: 'App.showHistory()' }];
+        this.updateBreadcrumb();
+        History.render();
+        this.switchView('history-view');
     },
 
     // 导入导出

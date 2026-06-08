@@ -1117,3 +1117,95 @@ body {
 .mb-1 { margin-bottom: 8px; }
 .mb-2 { margin-bottom: 16px; }
 .hidden { display: none !important; }
+
+
+/* History */
+.history-item {
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.history-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.history-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 4px;
+}
+
+.history-meta {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin-bottom: 8px;
+}
+
+.history-detail {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.history-tag {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--gray-100);
+    color: var(--gray-600);
+}
+
+.history-tag.mode-practice {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.history-tag.mode-exam {
+    background: var(--warning-light);
+    color: var(--warning);
+}
+
+.history-side {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.history-date {
+    font-size: 13px;
+    color: var(--gray-400);
+    margin-bottom: 8px;
+}
+
+/* File Upload */
+.file-upload-wrapper {
+    padding: 12px 24px;
+    background: #fff;
+    color: var(--gray-700);
+    border: 2px dashed var(--gray-300);
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+    margin-top: 8px;
+}
+
+.file-upload-wrapper:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-light);
+}
+
+.file-upload-text {
+    pointer-events: none;
+}

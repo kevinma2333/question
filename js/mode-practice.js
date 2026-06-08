@@ -18,6 +18,8 @@ const PracticeMode = {
         this.actions = document.getElementById('practice-actions');
         this.setInfo = App.setInfo;
         this.reviewMode = reviewMode;
+        this.shuffle = shuffle;
+        this.startTime = Date.now();
 
         if (prefillAnswer && this.questions.length === 1) {
             const q = this.questions[0];
@@ -63,7 +65,8 @@ const PracticeMode = {
                 let html = QuestionRender.render(q, {
                     mode: 'review',
                     userAnswer: userAnswer,
-                    isCorrect: isCorrect
+                    isCorrect: isCorrect,
+                    context: 'practice'
                 });
                 let feedback = '';
                 if (isCorrect) {
@@ -83,7 +86,8 @@ const PracticeMode = {
                     mode: 'comparison',
                     userAnswer: userAnswer,
                     onBlankCheck: null,
-                    blankChecks: this.blankChecks[q.id] || {}
+                    blankChecks: this.blankChecks[q.id] || {},
+                    context: 'practice'
                 });
                 if (q.analysis) {
                     html += `<div class="analysis-box"><strong>解析：</strong>${QuestionRender.escapeHtml(q.analysis)}</div>`;
@@ -98,13 +102,18 @@ const PracticeMode = {
         let html = QuestionRender.render(q, {
             mode: 'answer',
             userAnswer: userAnswer,
-            onAnswer: isObjective ? 'PracticeMode.handleObjectiveAnswer' : 'PracticeMode.handleSubjectiveInput'
+            onAnswer: isObjective ? 'PracticeMode.handleObjectiveAnswer' : 'PracticeMode.handleSubjectiveInput',
+            context: 'practice'
         });
         this.container.innerHTML = html;
 
-        // 绑定事件（对于非客观题需要额外绑定）
+        // 绑定事件
         if (!isObjective) {
             this.bindSubjectiveEvents(q);
+        }
+        // 客观题已经通过 onclick 绑定，但需要确保事件能触发
+        if (isObjective && q.type !== 'multiple') {
+            // 单选和判断题点击选项后直接处理，不需要额外绑定
         }
 
         // 渲染操作按钮
@@ -155,41 +164,43 @@ const PracticeMode = {
             }
             this.answers[q.id] = current;
             this.render();
+            return;
+        }
+
+        // 单选题或判断题
+        this.answers[q.id] = answer;
+        const isCorrect = this.checkAnswer(q, answer);
+
+        // 重新渲染显示结果
+        let html = QuestionRender.render(q, {
+            mode: 'review',
+            userAnswer: answer,
+            isCorrect: isCorrect
+        });
+        this.container.innerHTML = html;
+
+        // 显示反馈
+        let feedback = '';
+        if (isCorrect) {
+            feedback = `<div class="feedback-box correct"><div class="feedback-title">回答正确</div></div>`;
         } else {
-            this.answers[q.id] = answer;
-            const isCorrect = this.checkAnswer(q, answer);
+            feedback = `<div class="feedback-box wrong"><div class="feedback-title">回答错误</div><div>正确答案：${this.formatAnswer(q)}</div></div>`;
+        }
+        if (q.analysis) {
+            feedback += `<div class="analysis-box"><strong>解析：</strong>${QuestionRender.escapeHtml(q.analysis)}</div>`;
+        }
+        this.container.innerHTML += feedback;
 
-            // 重新渲染显示结果
-            let html = QuestionRender.render(q, {
-                mode: 'review',
-                userAnswer: answer,
-                isCorrect: isCorrect
-            });
-            this.container.innerHTML = html;
+        // 更新按钮
+        let btnHtml = `<button class="btn-primary" onclick="PracticeMode.next()">下一题</button>`;
+        if (this.currentIndex > 0) {
+            btnHtml += `<button class="btn-secondary" onclick="PracticeMode.prev()">上一题</button>`;
+        }
+        this.actions.innerHTML = btnHtml;
 
-            // 显示反馈
-            let feedback = '';
-            if (isCorrect) {
-                feedback = `<div class="feedback-box correct"><div class="feedback-title">回答正确</div></div>`;
-            } else {
-                feedback = `<div class="feedback-box wrong"><div class="feedback-title">回答错误</div><div>正确答案：${this.formatAnswer(q)}</div></div>`;
-            }
-            if (q.analysis) {
-                feedback += `<div class="analysis-box"><strong>解析：</strong>${QuestionRender.escapeHtml(q.analysis)}</div>`;
-            }
-            this.container.innerHTML += feedback;
-
-            // 更新按钮
-            let btnHtml = `<button class="btn-primary" onclick="PracticeMode.next()">下一题</button>`;
-            if (this.currentIndex > 0) {
-                btnHtml += `<button class="btn-secondary" onclick="PracticeMode.prev()">上一题</button>`;
-            }
-            this.actions.innerHTML = btnHtml;
-
-            // 记录错题
-            if (!isCorrect) {
-                WrongBook.add(q, this.setInfo, answer);
-            }
+        // 记录错题
+        if (!isCorrect) {
+            WrongBook.add(q, this.setInfo, answer);
         }
     },
 
@@ -260,7 +271,8 @@ const PracticeMode = {
             mode: 'comparison',
             userAnswer: this.answers[q.id],
             onBlankCheck: 'PracticeMode.handleBlankCheck',
-            blankChecks: this.blankChecks[q.id] || {}
+            blankChecks: this.blankChecks[q.id] || {},
+            context: 'practice'
         });
         this.container.innerHTML = html;
 
@@ -354,10 +366,28 @@ const PracticeMode = {
             if (this.reviewMode) {
                 App.goHome();
             } else {
+                this.saveHistory();
                 App.showToast('练习完成');
                 App.goHome();
             }
         }
+    },
+
+    saveHistory() {
+        const record = {
+            id: 'rec-' + Date.now(),
+            timestamp: Date.now(),
+            mode: 'practice',
+            groupId: this.setInfo.groupId,
+            groupName: this.setInfo.groupName,
+            bankId: this.setInfo.bankId,
+            bankName: this.setInfo.bankName,
+            setId: this.setInfo.setId,
+            setName: this.setInfo.setName,
+            total: this.questions.length,
+            shuffle: !!this.shuffle
+        };
+        History.add(record);
     },
 
     prev() {

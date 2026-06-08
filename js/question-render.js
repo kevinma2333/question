@@ -7,21 +7,23 @@ const QuestionRender = {
             isCorrect = null,
             onAnswer = null,
             onBlankCheck = null,
-            blankChecks = null   // 各空的对错状态 {0: true, 1: false}
+            blankChecks = null,   // 各空的对错状态 {0: true, 1: false}
+            context = 'practice'  // 'practice' | 'exam'
         } = options;
 
         switch (question.type) {
-            case 'single': return this.renderSingle(question, mode, userAnswer, isCorrect, onAnswer);
-            case 'multiple': return this.renderMultiple(question, mode, userAnswer, isCorrect, onAnswer);
-            case 'judgment': return this.renderJudgment(question, mode, userAnswer, isCorrect, onAnswer);
+            case 'single': return this.renderSingle(question, mode, userAnswer, isCorrect, onAnswer, context);
+            case 'multiple': return this.renderMultiple(question, mode, userAnswer, isCorrect, onAnswer, context);
+            case 'judgment': return this.renderJudgment(question, mode, userAnswer, isCorrect, onAnswer, context);
             case 'fill': return this.renderFill(question, mode, userAnswer, isCorrect, onAnswer, onBlankCheck, blankChecks);
             case 'essay': return this.renderEssay(question, mode, userAnswer, isCorrect, onAnswer, onBlankCheck);
             default: return `<div>未知题型</div>`;
         }
     },
 
-    renderSingle(question, mode, userAnswer, isCorrect, onAnswer) {
+    renderSingle(question, mode, userAnswer, isCorrect, onAnswer, context = 'practice') {
         const disabled = mode !== 'answer';
+        const handler = context === 'exam' ? 'ExamMode' : 'PracticeMode';
         let html = `<div class="question-text">${this.escapeHtml(question.question)}</div>`;
         html += '<div class="options-list">';
         question.options.forEach((opt, idx) => {
@@ -35,7 +37,7 @@ const QuestionRender = {
                 if (isRightAnswer) cls += ' correct';
                 else if (isSelected && !isCorrect) cls += ' wrong';
             }
-            html += `<div class="${cls}" ${!disabled ? `onclick="${onAnswer ? onAnswer + '\'' + letter + '\')' : ''}"` : ''}>
+            html += `<div class="${cls}" ${!disabled ? `onclick="${handler}.handleObjectiveAnswer('${letter}')"` : ''}>
                 <input type="radio" name="q" ${isSelected ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
                 <span>${this.escapeHtml(opt)}</span>
             </div>`;
@@ -44,9 +46,10 @@ const QuestionRender = {
         return html;
     },
 
-    renderMultiple(question, mode, userAnswer, isCorrect, onAnswer) {
+    renderMultiple(question, mode, userAnswer, isCorrect, onAnswer, context = 'practice') {
         const disabled = mode !== 'answer';
         const selected = Array.isArray(userAnswer) ? userAnswer : [];
+        const handler = context === 'exam' ? 'ExamMode' : 'PracticeMode';
         let html = `<div class="question-text">${this.escapeHtml(question.question)}</div>`;
         html += '<div class="options-list">';
         question.options.forEach((opt, idx) => {
@@ -60,7 +63,7 @@ const QuestionRender = {
                 if (isRightAnswer) cls += ' correct';
                 else if (isSelected && !isCorrect) cls += ' wrong';
             }
-            html += `<div class="${cls}" ${!disabled ? `onclick="${onAnswer ? onAnswer + '\'' + letter + '\')' : ''}"` : ''}>
+            html += `<div class="${cls}" ${!disabled ? `onclick="${handler}.handleObjectiveAnswer('${letter}')"` : ''}>
                 <input type="checkbox" ${isSelected ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
                 <span>${this.escapeHtml(opt)}</span>
             </div>`;
@@ -69,11 +72,12 @@ const QuestionRender = {
         return html;
     },
 
-    renderJudgment(question, mode, userAnswer, isCorrect, onAnswer) {
+    renderJudgment(question, mode, userAnswer, isCorrect, onAnswer, context = 'practice') {
         const disabled = mode !== 'answer';
         const opts = question.options || ['正确', '错误'];
         const trueVal = opts[0];
         const falseVal = opts[1];
+        const handler = context === 'exam' ? 'ExamMode' : 'PracticeMode';
         let html = `<div class="question-text">${this.escapeHtml(question.question)}</div>`;
         html += '<div class="options-list">';
 
@@ -88,7 +92,7 @@ const QuestionRender = {
                 if (isRightAnswer) cls += ' correct';
                 else if (isSelected && !isCorrect) cls += ' wrong';
             }
-            html += `<div class="${cls}" ${!disabled ? `onclick="${onAnswer ? onAnswer + '(' + val + ')' : ''}"` : ''}>
+            html += `<div class="${cls}" ${!disabled ? `onclick="${handler}.handleObjectiveAnswer(${val})"` : ''}>
                 <span>${this.escapeHtml(label)}</span>
             </div>`;
         });
