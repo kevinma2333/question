@@ -1,0 +1,16 @@
+{
+  "banks": [
+    {
+      "id": "frontend",
+      "name": "前端开发",
+      "folder": "前端开发",
+      "description": "前端技术面试题"
+    },
+    {
+      "id": "backend",
+      "name": "后端开发",
+      "folder": "后端开发",
+      "description": "后端技术面试题"
+    }
+  ]
+}

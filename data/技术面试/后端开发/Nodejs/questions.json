@@ -1,0 +1,29 @@
+{
+  "title": "Node.js 基础",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "question": "Node.js是基于什么引擎运行的？",
+      "options": [
+        "A. SpiderMonkey",
+        "B. JavaScriptCore",
+        "C. V8",
+        "D. Chakra"
+      ],
+      "answer": "C",
+      "analysis": "Node.js基于Google的V8引擎",
+      "points": 5
+    },
+    {
+      "id": "q2",
+      "type": "fill",
+      "question": "Node.js使用____机制处理异步操作",
+      "answer": [
+        "事件驱动"
+      ],
+      "analysis": "Node.js采用事件驱动、非阻塞I/O模型",
+      "points": 5
+    }
+  ]
+}

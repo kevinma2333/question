@@ -1,0 +1,16 @@
+{
+  "sets": [
+    {
+      "id": "multiplication",
+      "name": "表内乘法",
+      "folder": "表内乘法",
+      "description": "乘法口诀表练习"
+    },
+    {
+      "id": "division",
+      "name": "简单除法",
+      "folder": "简单除法",
+      "description": "表内除法练习"
+    }
+  ]
+}

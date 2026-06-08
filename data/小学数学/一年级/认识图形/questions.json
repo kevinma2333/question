@@ -1,0 +1,41 @@
+{
+  "title": "认识图形",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "question": "下面哪个图形是圆形？",
+      "options": [
+        "A. 正方形",
+        "B. 三角形",
+        "C. 圆形",
+        "D. 长方形"
+      ],
+      "answer": "C",
+      "analysis": "",
+      "points": 5
+    },
+    {
+      "id": "q2",
+      "type": "judgment",
+      "question": "长方形有四个角",
+      "options": [
+        "正确",
+        "错误"
+      ],
+      "answer": true,
+      "analysis": "长方形确实有四个角",
+      "points": 5
+    },
+    {
+      "id": "q3",
+      "type": "fill",
+      "question": "正方形有____条边",
+      "answer": [
+        "4"
+      ],
+      "analysis": "正方形有4条相等的边",
+      "points": 5
+    }
+  ]
+}

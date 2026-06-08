@@ -1,0 +1,65 @@
+{
+  "title": "JavaScript 基础",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "question": "JavaScript中，以下哪个不是基本数据类型？",
+      "options": [
+        "A. String",
+        "B. Number",
+        "C. Array",
+        "D. Boolean"
+      ],
+      "answer": "C",
+      "analysis": "Array是对象类型，不是基本数据类型",
+      "points": 5
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "question": "以下哪些方法可以创建JavaScript对象？",
+      "options": [
+        "A. 对象字面量",
+        "B. new Object()",
+        "C. Object.create()",
+        "D. 以上全部"
+      ],
+      "answer": [
+        "D"
+      ],
+      "analysis": "三种方式都可以创建对象",
+      "points": 5
+    },
+    {
+      "id": "q3",
+      "type": "judgment",
+      "question": "JavaScript是强类型语言",
+      "options": [
+        "正确",
+        "错误"
+      ],
+      "answer": false,
+      "analysis": "JavaScript是弱类型（动态类型）语言",
+      "points": 5
+    },
+    {
+      "id": "q4",
+      "type": "fill",
+      "question": "使用____关键字声明的变量具有块级作用域",
+      "answer": [
+        "let"
+      ],
+      "analysis": "let和const都具有块级作用域",
+      "points": 5
+    },
+    {
+      "id": "q5",
+      "type": "essay",
+      "question": "请解释JavaScript中的事件冒泡和事件捕获",
+      "answer": "事件冒泡是从目标元素向上传播到根元素；事件捕获是从根元素向下传播到目标元素",
+      "analysis": "DOM事件传播的两个阶段",
+      "points": 10
+    }
+  ]
+}

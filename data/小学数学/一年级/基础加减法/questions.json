@@ -1,0 +1,127 @@
+{
+  "title": "基础加减法",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "question": "1 + 1 = ?",
+      "options": [
+        "A. 1",
+        "B. 2",
+        "C. 3",
+        "D. 4"
+      ],
+      "answer": "B",
+      "analysis": "1加1等于2",
+      "points": 5
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "question": "5 - 2 = ?",
+      "options": [
+        "A. 2",
+        "B. 3",
+        "C. 4",
+        "D. 5"
+      ],
+      "answer": "B",
+      "analysis": "5减2等于3",
+      "points": 5
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "question": "3 + 4 = ?",
+      "options": [
+        "A. 6",
+        "B. 7",
+        "C. 8",
+        "D. 9"
+      ],
+      "answer": "B",
+      "analysis": "3加4等于7",
+      "points": 5
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "question": "下面哪些数字比3大？",
+      "options": [
+        "A. 1",
+        "B. 4",
+        "C. 5",
+        "D. 2"
+      ],
+      "answer": [
+        "B",
+        "C"
+      ],
+      "analysis": "4和5都比3大",
+      "points": 5
+    },
+    {
+      "id": "q5",
+      "type": "judgment",
+      "question": "3 比 2 大",
+      "options": [
+        "正确",
+        "错误"
+      ],
+      "answer": true,
+      "analysis": "3确实比2大",
+      "points": 5
+    },
+    {
+      "id": "q6",
+      "type": "judgment",
+      "question": "2 + 2 = 5",
+      "options": [
+        "正确",
+        "错误"
+      ],
+      "answer": false,
+      "analysis": "2加2等于4，不等于5",
+      "points": 5
+    },
+    {
+      "id": "q7",
+      "type": "fill",
+      "question": "4 + ____ = 7",
+      "answer": [
+        "3"
+      ],
+      "analysis": "7减4等于3",
+      "points": 5
+    },
+    {
+      "id": "q8",
+      "type": "fill",
+      "question": "____ - 2 = 5",
+      "answer": [
+        "7"
+      ],
+      "analysis": "5加2等于7",
+      "points": 5
+    },
+    {
+      "id": "q9",
+      "type": "fill",
+      "question": "3 + ____ = 6，____ - 1 = 4",
+      "answer": [
+        "3",
+        "5"
+      ],
+      "analysis": "第一空：6减3等于3；第二空：4加1等于5",
+      "points": 10
+    },
+    {
+      "id": "q10",
+      "type": "essay",
+      "question": "请写出5可以分成哪两个数（至少写出两种）",
+      "answer": "1和4，2和3",
+      "analysis": "5可以分成1和4，也可以分成2和3",
+      "points": 10
+    }
+  ]
+}

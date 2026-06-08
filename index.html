@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>在线刷题系统</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <header class="app-header">
+            <div class="header-inner">
+                <h1 class="logo" onclick="App.goHome()">在线刷题</h1>
+                <nav class="header-nav">
+                    <button class="nav-btn" onclick="App.showWrongBook()">错题本</button>
+                    <button class="nav-btn" onclick="App.showImportExport()">存档</button>
+                </nav>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <!-- 面包屑 -->
+            <div class="breadcrumb" id="breadcrumb"></div>
+
+            <!-- 首页：题组列表 -->
+            <section id="home-view" class="view active">
+                <div class="hero">
+                    <h2>选择题组开始学习</h2>
+                    <p>支持练习模式与考试模式，错题自动收录</p>
+                </div>
+                <div class="card-grid" id="group-list"></div>
+            </section>
+
+            <!-- 题组页：题库列表 -->
+            <section id="group-view" class="view">
+                <div class="page-header">
+                    <h2 id="group-title"></h2>
+                    <p id="group-desc"></p>
+                </div>
+                <div class="list-container" id="bank-list"></div>
+            </section>
+
+            <!-- 题库页：题目集列表 -->
+            <section id="bank-view" class="view">
+                <div class="page-header">
+                    <h2 id="bank-title"></h2>
+                </div>
+                <div class="list-container" id="set-list"></div>
+            </section>
+
+            <!-- 题目集页：选择模式 -->
+            <section id="set-view" class="view">
+                <div class="page-header">
+                    <h2 id="set-title"></h2>
+                    <p id="set-desc"></p>
+                </div>
+                <div class="mode-select">
+                    <div class="mode-card" onclick="App.startPractice()">
+                        <div class="mode-icon practice-icon"></div>
+                        <h3>练习模式</h3>
+                        <p>逐题作答，即时反馈</p>
+                        <label class="shuffle-label">
+                            <input type="checkbox" id="practice-shuffle">
+                            <span>打乱题目顺序</span>
+                        </label>
+                    </div>
+                    <div class="mode-card" onclick="App.startExam()">
+                        <div class="mode-icon exam-icon"></div>
+                        <h3>考试模式</h3>
+                        <p>全部答完后统一查看结果</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 练习模式 -->
+            <section id="practice-view" class="view">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="practice-progress"></div>
+                </div>
+                <div class="question-meta">
+                    <span id="practice-counter"></span>
+                    <span class="type-tag" id="practice-type-tag"></span>
+                </div>
+                <div id="practice-question-container"></div>
+                <div class="practice-actions" id="practice-actions"></div>
+            </section>
+
+            <!-- 考试模式 -->
+            <section id="exam-view" class="view">
+                <div class="exam-header">
+                    <div class="exam-info">
+                        <span id="exam-counter"></span>
+                        <span class="timer" id="exam-timer">00:00</span>
+                    </div>
+                    <button class="btn-submit-exam" onclick="ExamMode.submit()">交卷</button>
+                </div>
+                <div class="exam-layout">
+                    <div class="exam-sidebar" id="exam-sidebar"></div>
+                    <div class="exam-main" id="exam-question-container"></div>
+                </div>
+            </section>
+
+            <!-- 结果页 -->
+            <section id="result-view" class="view">
+                <div class="result-header">
+                    <h2>答题结果</h2>
+                    <div class="score-circle" id="score-circle">
+                        <span id="score-text"></span>
+                    </div>
+                </div>
+                <div class="result-stats" id="result-stats"></div>
+                <div class="result-actions">
+                    <button class="btn-primary" onclick="App.showComparison()">查看比对</button>
+                    <button class="btn-secondary" onclick="App.restart()">重新答题</button>
+                    <button class="btn-secondary" onclick="App.goHome()">返回首页</button>
+                </div>
+                <div class="comparison-section" id="comparison-section"></div>
+            </section>
+
+            <!-- 错题本 -->
+            <section id="wrong-book-view" class="view">
+                <div class="page-header">
+                    <h2>错题本</h2>
+                    <div class="filter-bar">
+                        <select id="filter-group" onchange="WrongBook.render()">
+                            <option value="">全部题组</option>
+                        </select>
+                        <select id="filter-bank" onchange="WrongBook.render()">
+                            <option value="">全部题库</option>
+                        </select>
+                        <button class="btn-danger" onclick="WrongBook.clearAll()">清空错题</button>
+                    </div>
+                </div>
+                <div id="wrong-book-list"></div>
+            </section>
+
+            <!-- 导入导出 -->
+            <section id="import-export-view" class="view">
+                <div class="page-header">
+                    <h2>存档管理</h2>
+                    <p>所有数据保存在浏览器本地，可导出备份或导入恢复</p>
+                </div>
+                <div class="io-cards">
+                    <div class="io-card">
+                        <h3>导出存档</h3>
+                        <p>将当前所有学习数据下载为文件</p>
+                        <button class="btn-primary" onclick="Storage.exportData()">下载存档</button>
+                    </div>
+                    <div class="io-card">
+                        <h3>导入存档</h3>
+                        <p>从文件恢复学习数据</p>
+                        <input type="file" id="import-file" accept=".json" onchange="Storage.importData(this)">
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 比对弹窗（练习模式用） -->
+        <div class="modal" id="comparison-modal">
+            <div class="modal-overlay" onclick="App.closeModal()"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>答案比对</h3>
+                    <button class="modal-close" onclick="App.closeModal()">&times;</button>
+                </div>
+                <div class="modal-body" id="comparison-modal-body"></div>
+                <div class="modal-footer" id="comparison-modal-footer"></div>
+            </div>
+        </div>
+
+        <!-- 提示消息 -->
+        <div class="toast" id="toast"></div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/data-loader.js"></script>
+    <script src="js/question-render.js"></script>
+    <script src="js/wrong-book.js"></script>
+    <script src="js/mode-practice.js"></script>
+    <script src="js/mode-exam.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

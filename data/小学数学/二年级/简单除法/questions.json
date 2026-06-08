@@ -1,0 +1,37 @@
+{
+  "title": "简单除法",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "question": "8 ÷ 2 = ?",
+      "options": [
+        "A. 2",
+        "B. 3",
+        "C. 4",
+        "D. 5"
+      ],
+      "answer": "C",
+      "analysis": "二四得八，所以8除以2等于4",
+      "points": 5
+    },
+    {
+      "id": "q2",
+      "type": "fill",
+      "question": "12 ÷ ____ = 3",
+      "answer": [
+        "4"
+      ],
+      "analysis": "三四十二",
+      "points": 5
+    },
+    {
+      "id": "q3",
+      "type": "essay",
+      "question": "请解释除法和乘法的关系",
+      "answer": "除法是乘法的逆运算。例如：3x4=12，所以12÷3=4，12÷4=3",
+      "analysis": "",
+      "points": 10
+    }
+  ]
+}

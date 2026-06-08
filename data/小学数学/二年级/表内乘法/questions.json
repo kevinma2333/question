@@ -1,0 +1,91 @@
+{
+  "title": "表内乘法",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "question": "2 x 3 = ?",
+      "options": [
+        "A. 5",
+        "B. 6",
+        "C. 7",
+        "D. 8"
+      ],
+      "answer": "B",
+      "analysis": "二三得六",
+      "points": 5
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "question": "4 x 5 = ?",
+      "options": [
+        "A. 18",
+        "B. 19",
+        "C. 20",
+        "D. 21"
+      ],
+      "answer": "C",
+      "analysis": "四五二十",
+      "points": 5
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "question": "哪些乘法口诀的结果是12？",
+      "options": [
+        "A. 二六十二",
+        "B. 三四十二",
+        "C. 四四十六",
+        "D. 一十二"
+      ],
+      "answer": [
+        "A",
+        "B"
+      ],
+      "analysis": "二六十二和三四十二都等于12",
+      "points": 5
+    },
+    {
+      "id": "q4",
+      "type": "judgment",
+      "question": "5 x 5 = 20",
+      "options": [
+        "正确",
+        "错误"
+      ],
+      "answer": false,
+      "analysis": "五五二十五，不是20",
+      "points": 5
+    },
+    {
+      "id": "q5",
+      "type": "fill",
+      "question": "三七____",
+      "answer": [
+        "二十一"
+      ],
+      "analysis": "三七二十一",
+      "points": 5
+    },
+    {
+      "id": "q6",
+      "type": "fill",
+      "question": "四____二十，____八十六",
+      "answer": [
+        "五",
+        "二"
+      ],
+      "analysis": "四五二十，二八十六",
+      "points": 10
+    },
+    {
+      "id": "q7",
+      "type": "essay",
+      "question": "请写出乘法口诀\"三八二十四\"的含义，并画一个简单的示意图说明",
+      "answer": "3个8相加等于24，或者8个3相加等于24",
+      "analysis": "乘法口诀表示几个相同加数的和",
+      "points": 10
+    }
+  ]
+}

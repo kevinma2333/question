@@ -1,0 +1,10 @@
+{
+  "sets": [
+    {
+      "id": "js-basics",
+      "name": "JavaScript",
+      "folder": "JavaScript",
+      "description": "JavaScript 基础面试题"
+    }
+  ]
+}

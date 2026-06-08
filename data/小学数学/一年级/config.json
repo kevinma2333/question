@@ -1,0 +1,16 @@
+{
+  "sets": [
+    {
+      "id": "basic-add",
+      "name": "基础加减法",
+      "folder": "基础加减法",
+      "description": "10以内加减法练习"
+    },
+    {
+      "id": "shapes",
+      "name": "认识图形",
+      "folder": "认识图形",
+      "description": "认识基本几何图形"
+    }
+  ]
+}

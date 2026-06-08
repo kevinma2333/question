@@ -1,0 +1,16 @@
+{
+  "groups": [
+    {
+      "id": "primary-math",
+      "name": "小学数学",
+      "folder": "小学数学",
+      "description": "小学一至二年级数学题库"
+    },
+    {
+      "id": "tech-interview",
+      "name": "技术面试",
+      "folder": "技术面试",
+      "description": "前端与后端开发面试题"
+    }
+  ]
+}
