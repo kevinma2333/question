@@ -189,12 +189,12 @@ const ExamMode = {
         if (unanswered.length > 0) {
             const objectiveUnanswered = unanswered.filter(q => ['single', 'multiple', 'judgment'].includes(q.type));
             const subjectiveUnanswered = unanswered.filter(q => !['single', 'multiple', 'judgment'].includes(q.type));
-
+            
             // 客观题未答的自动给0分（不进入比对）
             objectiveUnanswered.forEach(q => {
                 this.answers[q.id] = q.type === 'multiple' ? [] : null;
             });
-
+            
             // 如果有主观题未答，提示
             if (subjectiveUnanswered.length > 0) {
                 if (!confirm(`还有 ${subjectiveUnanswered.length} 道主观题未作答，是否继续提交？`)) {
@@ -218,13 +218,13 @@ const ExamMode = {
             }
             this.currentIndex++;
         }
-
+        
         // 如果所有题都是客观题，直接完成
         if (this.currentIndex >= this.questions.length) {
             this.finishComparison();
             return;
         }
-
+        
         const q = this.questions[this.currentIndex];
         const total = this.questions.length;
         const current = this.currentIndex + 1;
@@ -264,7 +264,7 @@ const ExamMode = {
         if (this.currentIndex > 0) {
             html += `<button class="btn-secondary" onclick="ExamMode.prevComparison()">上一题</button>`;
         }
-
+        
         // 检查用户答案是否和答案完全一致（填空题需要所有空都正确）
         let isPerfectMatch = false;
         if (q.type === 'fill') {
@@ -275,7 +275,7 @@ const ExamMode = {
         } else if (q.type === 'essay') {
             isPerfectMatch = userAnswer && userAnswer.trim() === (q.answer || '').trim();
         }
-
+        
         // 检查是否留空
         let isBlank = false;
         if (q.type === 'fill') {
@@ -284,7 +284,7 @@ const ExamMode = {
         } else if (q.type === 'essay') {
             isBlank = !userAnswer || userAnswer.trim() === '';
         }
-
+        
         // 如果完全一致，隐藏"错误"按钮；如果留空，隐藏"正确"按钮
         if (!isPerfectMatch) {
             html += `<button class="btn-primary" style="background:#ef4444;border-color:#ef4444;" onclick="ExamMode.markSubjective(false)">错误</button>`;
@@ -292,7 +292,7 @@ const ExamMode = {
         if (!isBlank) {
             html += `<button class="btn-primary" style="background:#22c55e;border-color:#22c55e;" onclick="ExamMode.markSubjective(true)">正确</button>`;
         }
-
+        
         // 检查后面是否还有主观题
         let hasNextSubjective = false;
         for (let i = this.currentIndex + 1; i < this.questions.length; i++) {
@@ -301,7 +301,7 @@ const ExamMode = {
                 break;
             }
         }
-
+        
         if (hasNextSubjective) {
             html += `<button class="btn-secondary" onclick="ExamMode.nextComparison()">跳过</button>`;
         } else {
@@ -342,6 +342,24 @@ const ExamMode = {
         const q = this.questions[this.currentIndex];
         if (!this.blankChecks[q.id]) this.blankChecks[q.id] = {};
         this.blankChecks[q.id][0] = checked;
+    },
+
+    markSubjective(isCorrect) {
+        const q = this.questions[this.currentIndex];
+        if (!this.blankChecks[q.id]) this.blankChecks[q.id] = {};
+        if (q.type === 'fill') {
+            const totalBlanks = q.answer.length;
+            for (let i = 0; i < totalBlanks; i++) {
+                this.blankChecks[q.id][i] = isCorrect;
+            }
+        } else if (q.type === 'essay') {
+            this.blankChecks[q.id][0] = isCorrect;
+        }
+        // 如果不正确，加入错题本
+        if (!isCorrect) {
+            WrongBook.add(q, this.setInfo, this.answers[q.id]);
+        }
+        this.nextComparison();
     },
 
     nextComparison() {
@@ -387,24 +405,6 @@ const ExamMode = {
                 WrongBook.add(q, this.setInfo, this.answers[q.id], wrongBlanks);
             }
         }
-    },
-
-    markSubjective(isCorrect) {
-        const q = this.questions[this.currentIndex];
-        if (!this.blankChecks[q.id]) this.blankChecks[q.id] = {};
-        if (q.type === 'fill') {
-            const totalBlanks = q.answer.length;
-            for (let i = 0; i < totalBlanks; i++) {
-                this.blankChecks[q.id][i] = isCorrect;
-            }
-        } else if (q.type === 'essay') {
-            this.blankChecks[q.id][0] = isCorrect;
-        }
-        // 如果不正确，加入错题本
-        if (!isCorrect) {
-            WrongBook.add(q, this.setInfo, this.answers[q.id]);
-        }
-        this.nextComparison();
     },
 
     finishComparison() {
