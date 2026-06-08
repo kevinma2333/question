@@ -232,7 +232,7 @@ const App = {
 
         // 直接进入比对界面（只显示主观题）
         this.showComparison();
-    }
+    },
 
     showComparison() {
         if (!this.examData) return;
@@ -319,7 +319,7 @@ const App = {
                 }
             }
         });
-    },,
+    },
 
     toggleExamBlank(questionId, blankIndex) {
         const q = this.examData.questions.find(q => q.id === questionId);
@@ -327,8 +327,6 @@ const App = {
         WrongBook.add(q, this.setInfo, ans, [blankIndex]);
         App.showToast('已标记为错误并加入错题本');
     },
-
-
 
     showExamScore() {
         if (!this.examData) return;
@@ -345,7 +343,7 @@ const App = {
             <div class="stat-card"><div class="stat-value">${mins}分${secs}秒</div><div class="stat-label">用时</div></div>
         `;
         document.getElementById('result-stats').innerHTML = statsHtml;
-    }
+    },
 
     checkAnswer(question, answer) {
         if (question.type === 'single') return question.answer === answer;
@@ -358,15 +356,6 @@ const App = {
         if (question.type === 'judgment') return question.answer === answer;
         return false;
     },
-
-    // 显示比对
-,,
-
-
-
-,
-
-
 
     formatAnswerDisplay(question, answer) {
         if (answer === null || answer === undefined) return '<span style="color:#94a3b8;">未作答</span>';
@@ -430,11 +419,6 @@ const App = {
         setTimeout(() => toast.classList.remove('show'), 2500);
     }
 };
-
-// 初始化
-document.addEventListener('DOMContentLoaded', () => {
-    App.init();
-});;
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
