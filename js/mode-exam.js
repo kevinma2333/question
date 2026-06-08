@@ -85,7 +85,7 @@ const ExamMode = {
         document.getElementById('exam-counter').textContent = `${current} / ${total}`;
 
         const container = document.getElementById('exam-question-container');
-        const userAnswer = this.answers[q.id] || null;
+        const userAnswer = this.answers[q.id] !== undefined ? this.answers[q.id] : null;
 
         let html = QuestionRender.render(q, {
             mode: 'answer',
@@ -163,7 +163,11 @@ const ExamMode = {
 
     jumpTo(index) {
         this.currentIndex = index;
-        this.renderQuestion();
+        if (this.submitted) {
+            this.renderComparison();
+        } else {
+            this.renderQuestion();
+        }
     },
 
     next() {
@@ -229,7 +233,7 @@ const ExamMode = {
         document.getElementById('exam-timer').textContent = '比对中';
 
         const container = document.getElementById('exam-question-container');
-        const userAnswer = this.answers[q.id] || null;
+        const userAnswer = this.answers[q.id] !== undefined ? this.answers[q.id] : null;
 
         let html = '';
         if (q.type === 'fill') {
@@ -255,10 +259,38 @@ const ExamMode = {
             }
         }
 
-        // 导航按钮
+        // 正确/错误判定按钮（取代下一题按钮）
         html += '<div class="practice-actions" style="margin-top:20px;">';
         if (this.currentIndex > 0) {
             html += `<button class="btn-secondary" onclick="ExamMode.prevComparison()">上一题</button>`;
+        }
+
+        // 检查用户答案是否和答案完全一致（填空题需要所有空都正确）
+        let isPerfectMatch = false;
+        if (q.type === 'fill') {
+            const userVals = Array.isArray(userAnswer) ? userAnswer : [];
+            const correctVals = q.answer || [];
+            isPerfectMatch = userVals.length === correctVals.length && 
+                userVals.every((v, i) => v && v.trim() === correctVals[i].trim());
+        } else if (q.type === 'essay') {
+            isPerfectMatch = userAnswer && userAnswer.trim() === (q.answer || '').trim();
+        }
+
+        // 检查是否留空
+        let isBlank = false;
+        if (q.type === 'fill') {
+            const userVals = Array.isArray(userAnswer) ? userAnswer : [];
+            isBlank = userVals.every(v => !v || v.trim() === '');
+        } else if (q.type === 'essay') {
+            isBlank = !userAnswer || userAnswer.trim() === '';
+        }
+
+        // 如果完全一致，隐藏"错误"按钮；如果留空，隐藏"正确"按钮
+        if (!isPerfectMatch) {
+            html += `<button class="btn-primary" style="background:#ef4444;border-color:#ef4444;" onclick="ExamMode.markSubjective(false)">错误</button>`;
+        }
+        if (!isBlank) {
+            html += `<button class="btn-primary" style="background:#22c55e;border-color:#22c55e;" onclick="ExamMode.markSubjective(true)">正确</button>`;
         }
 
         // 检查后面是否还有主观题
@@ -271,7 +303,7 @@ const ExamMode = {
         }
 
         if (hasNextSubjective) {
-            html += `<button class="btn-primary" onclick="ExamMode.nextComparison()">下一题</button>`;
+            html += `<button class="btn-secondary" onclick="ExamMode.nextComparison()">跳过</button>`;
         } else {
             html += `<button class="btn-primary" onclick="ExamMode.finishComparison()">完成比对，查看成绩</button>`;
         }
@@ -355,6 +387,24 @@ const ExamMode = {
                 WrongBook.add(q, this.setInfo, this.answers[q.id], wrongBlanks);
             }
         }
+    },
+
+    markSubjective(isCorrect) {
+        const q = this.questions[this.currentIndex];
+        if (!this.blankChecks[q.id]) this.blankChecks[q.id] = {};
+        if (q.type === 'fill') {
+            const totalBlanks = q.answer.length;
+            for (let i = 0; i < totalBlanks; i++) {
+                this.blankChecks[q.id][i] = isCorrect;
+            }
+        } else if (q.type === 'essay') {
+            this.blankChecks[q.id][0] = isCorrect;
+        }
+        // 如果不正确，加入错题本
+        if (!isCorrect) {
+            WrongBook.add(q, this.setInfo, this.answers[q.id]);
+        }
+        this.nextComparison();
     },
 
     finishComparison() {
