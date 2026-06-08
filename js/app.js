@@ -236,6 +236,7 @@ const App = {
 
     showComparison() {
         if (!this.examData) return;
+        this.switchView('result-view');
         const { questions, answers, score, correct, wrong, subjective, total, mins, secs } = this.examData;
         const container = document.getElementById('comparison-section');
 
@@ -357,7 +358,7 @@ const App = {
         return false;
     },
 
-    formatAnswerDisplay(question, answer) {
+        formatAnswerDisplay(question, answer) {
         if (answer === null || answer === undefined) return '<span style="color:#94a3b8;">未作答</span>';
         if (question.type === 'single') return QuestionRender.escapeHtml(answer);
         if (question.type === 'multiple') return Array.isArray(answer) ? answer.map(QuestionRender.escapeHtml).join(', ') : QuestionRender.escapeHtml(answer);
