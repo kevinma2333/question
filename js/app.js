@@ -291,18 +291,8 @@ const App = {
             html += '</div>';
         });
 
-        html += `<div style="text-align:center;margin-top:24px;"><button class="btn-primary" id="exam-score-btn" style="padding:14px 40px;font-size:18px;">查看成绩</button></div>`;
-
         container.innerHTML = html;
         container.scrollIntoView({ behavior: 'smooth' });
-
-        // 绑定事件
-        const scoreBtn = container.querySelector('#exam-score-btn');
-        if (scoreBtn) {
-            scoreBtn.addEventListener('click', () => {
-                this.showExamScore();
-            });
-        }
 
         // 事件委托：处理 blank-clickable 点击标记错误
         container.addEventListener('click', (e) => {
@@ -320,6 +310,9 @@ const App = {
                 }
             }
         });
+
+        // 直接显示成绩
+        this.showExamScore();
     },
 
     toggleExamBlank(questionId, blankIndex) {
@@ -362,7 +355,7 @@ const App = {
         if (answer === null || answer === undefined) return '<span style="color:#94a3b8;">未作答</span>';
         if (question.type === 'single') return QuestionRender.escapeHtml(answer);
         if (question.type === 'multiple') return Array.isArray(answer) ? answer.map(QuestionRender.escapeHtml).join(', ') : QuestionRender.escapeHtml(answer);
-        if (question.type === 'judgment') return answer ? '正确' : '错误';
+        if (question.type === 'judgment') return answer === true ? '正确' : '错误';
         return QuestionRender.escapeHtml(String(answer));
     },
 
