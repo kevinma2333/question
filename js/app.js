@@ -232,46 +232,32 @@ const App = {
 
         // 直接进入比对界面（只显示主观题）
         this.showComparison();
-    },,
+    }
 
-    checkAnswer(question, answer) {
-        if (question.type === 'single') return question.answer === answer;
-        if (question.type === 'multiple') {
-            const correct = question.answer;
-            const user = Array.isArray(answer) ? answer : [];
-            if (correct.length !== user.length) return false;
-            return correct.every(a => user.includes(a)) && user.every(a => correct.includes(a));
-        }
-        if (question.type === 'judgment') return question.answer === answer;
-        return false;
-    },
-
-    // 显示比对
     showComparison() {
         if (!this.examData) return;
         const { questions, answers, score, correct, wrong, subjective, total, mins, secs } = this.examData;
         const container = document.getElementById('comparison-section');
 
         let html = '<h3 style="margin-bottom:16px;font-size:20px;">逐题比对</h3>';
-        html += '<div style="margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:8px;font-size:14px;color:#64748b;">客观题已自动判定。请检查主观题，未作答的可直接填写，填错的可点击答案标记对错。</div>';
-
-        let hasUnansweredSubjective = false;
+        html += '<div style="margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:8px;font-size:14px;color:#64748b;">客观题已自动判定。请检查主观题，填错的可点击答案标记为错误。</div>';
 
         questions.forEach((q, idx) => {
             const userAnswer = answers[q.id];
             const isObjective = ['single', 'multiple', 'judgment'].includes(q.type);
-
-            // 只显示主观题
             if (isObjective) return;
 
             const isAnswered = q.type === 'fill'
                 ? (Array.isArray(userAnswer) && userAnswer.some(v => v && v.trim() !== ''))
                 : (userAnswer && userAnswer.trim() !== '');
 
-            if (!isAnswered) hasUnansweredSubjective = true;
+            // 未作答的直接标记为错误
+            if (!isAnswered) {
+                WrongBook.add(q, this.setInfo, userAnswer || (q.type === 'fill' ? [] : ''), q.type === 'fill' ? Array.from({length: q.answer.length}, (_, i) => i) : null);
+            }
 
-            html += `<div class="comparison-item" id="comp-${q.id}">`;
-            html += `<h4>第 ${idx + 1} 题 [${this.getTypeLabel(q.type)}] ${isAnswered ? '' : '<span style="color:#ef4444;">未作答</span>'}</h4>`;
+            html += `<div class="comparison-item" data-qid="${q.id}" data-qtype="${q.type}">`;
+            html += `<h4>第 ${idx + 1} 题 [${this.getTypeLabel(q.type)}] ${isAnswered ? '' : '<span style="color:#ef4444;">未作答（已记入错题本）</span>'}</h4>`;
             html += `<div style="margin-bottom:10px;color:#475569;">${QuestionRender.escapeHtml(q.question)}</div>`;
 
             if (q.type === 'fill') {
@@ -279,12 +265,12 @@ const App = {
                 const correctVals = q.answer || [];
                 for (let i = 0; i < correctVals.length; i++) {
                     const hasVal = userVals[i] && userVals[i].trim() !== '';
-                    html += `<div style="margin-bottom:8px;padding:8px;background:#f8fafc;border-radius:6px;">`;
+                    html += `<div class="blank-check-item" style="margin-bottom:8px;padding:8px;background:#f8fafc;border-radius:6px;" data-blankidx="${i}">`;
                     html += `<div style="font-weight:600;font-size:13px;color:#64748b;margin-bottom:4px;">第 ${i+1} 空</div>`;
                     if (hasVal) {
-                        html += `<div class="comparison-row"><div class="comparison-label">你的答案</div><div class="comparison-value user"><span class="blank-clickable" onclick="App.toggleExamBlank('${q.id}', ${i})">${QuestionRender.escapeHtml(userVals[i])}</span></div></div>`;
+                        html += `<div class="comparison-row"><div class="comparison-label">你的答案</div><div class="comparison-value user"><span class="blank-clickable" data-action="mark-wrong">${QuestionRender.escapeHtml(userVals[i])}</span></div></div>`;
                     } else {
-                        html += `<div class="comparison-row"><div class="comparison-label">你的答案</div><div class="comparison-value user"><input type="text" class="blank-input" id="exam-blank-${q.id}-${i}" placeholder="填写答案" style="width:120px;"></div></div>`;
+                        html += `<div class="comparison-row"><div class="comparison-label">你的答案</div><div class="comparison-value user"><span style="color:#94a3b8;">未填写（已记入错题本）</span></div></div>`;
                     }
                     html += `<div class="comparison-row"><div class="comparison-label">正确答案</div><div class="comparison-value answer">${QuestionRender.escapeHtml(correctVals[i])}</div></div>`;
                     html += `</div>`;
@@ -293,7 +279,7 @@ const App = {
                 if (isAnswered) {
                     html += `<div class="comparison-row"><div class="comparison-label">你的答案</div><div class="comparison-value user">${QuestionRender.escapeHtml(userAnswer)}</div></div>`;
                 } else {
-                    html += `<div class="comparison-row"><div class="comparison-label">你的答案</div><div class="comparison-value user"><textarea class="essay-textarea" id="exam-essay-${q.id}" placeholder="填写答案" style="min-height:80px;"></textarea></div></div>`;
+                    html += `<div class="comparison-row"><div class="comparison-label">你的答案</div><div class="comparison-value user"><span style="color:#94a3b8;">未填写（已记入错题本）</span></div></div>`;
                 }
                 html += `<div class="comparison-row"><div class="comparison-label">参考答案</div><div class="comparison-value answer">${QuestionRender.escapeHtml(q.answer || '无')}</div></div>`;
             }
@@ -304,78 +290,45 @@ const App = {
             html += '</div>';
         });
 
-        if (hasUnansweredSubjective) {
-            html += `<div style="text-align:center;margin-top:24px;"><button class="btn-primary" id="exam-submit-answers" style="padding:14px 40px;font-size:18px;">提交补答</button></div>`;
-        } else {
-            html += `<div style="text-align:center;margin-top:24px;"><button class="btn-primary" id="exam-score-btn" style="padding:14px 40px;font-size:18px;">查看成绩</button></div>`;
-        }
+        html += `<div style="text-align:center;margin-top:24px;"><button class="btn-primary" id="exam-score-btn" style="padding:14px 40px;font-size:18px;">查看成绩</button></div>`;
 
         container.innerHTML = html;
         container.scrollIntoView({ behavior: 'smooth' });
 
         // 绑定事件
-        setTimeout(() => {
-            const scoreBtn = document.getElementById('exam-score-btn');
-            if (scoreBtn) {
-                scoreBtn.addEventListener('click', function() {
-                    App.showExamScore();
-                });
-            }
-            const submitBtn = document.getElementById('exam-submit-answers');
-            if (submitBtn) {
-                submitBtn.addEventListener('click', function() {
-                    App.submitExamAnswers();
-                });
-            }
-        }, 10);
-    },
+        const scoreBtn = container.querySelector('#exam-score-btn');
+        if (scoreBtn) {
+            scoreBtn.addEventListener('click', () => {
+                this.showExamScore();
+            });
+        }
 
-
-
-    toggleExamBlank(questionId, blankIndex) {
-        const q = this.examData.questions.find(q => q.id === questionId);
-        const ans = this.examData.answers[questionId];
-        WrongBook.add(q, this.setInfo, ans, [blankIndex]);
-        App.showToast('已标记为错误并加入错题本');
-    },
-
-    toggleExamBlank(questionId, blankIndex) {
-        const q = this.examData.questions.find(q => q.id === questionId);
-        const ans = this.examData.answers[questionId];
-        WrongBook.add(q, this.setInfo, ans, [blankIndex]);
-        App.showToast('已标记为错误并加入错题本');
-    },
-
-        submitExamAnswers() {
-        // 收集补答的答案
-        this.examData.questions.forEach(q => {
-            if (['single', 'multiple', 'judgment'].includes(q.type)) return;
-            if (q.type === 'fill') {
-                const correctVals = q.answer || [];
-                const newVals = [];
-                let hasNew = false;
-                for (let i = 0; i < correctVals.length; i++) {
-                    const input = document.getElementById(`exam-blank-${q.id}-${i}`);
-                    if (input && input.value.trim()) {
-                        newVals[i] = input.value.trim();
-                        hasNew = true;
-                    } else {
-                        newVals[i] = this.examData.answers[q.id] && this.examData.answers[q.id][i] ? this.examData.answers[q.id][i] : '';
-                    }
-                }
-                if (hasNew) {
-                    this.examData.answers[q.id] = newVals;
-                }
-            } else if (q.type === 'essay') {
-                const textarea = document.getElementById(`exam-essay-${q.id}`);
-                if (textarea && textarea.value.trim()) {
-                    this.examData.answers[q.id] = textarea.value.trim();
+        // 事件委托：处理 blank-clickable 点击标记错误
+        container.addEventListener('click', (e) => {
+            const target = e.target.closest('[data-action="mark-wrong"]');
+            if (target) {
+                const item = target.closest('.comparison-item');
+                const blankItem = target.closest('.blank-check-item');
+                if (item && blankItem) {
+                    const qid = item.dataset.qid;
+                    const blankIdx = parseInt(blankItem.dataset.blankidx);
+                    this.toggleExamBlank(qid, blankIdx);
+                    target.classList.add('marked-wrong');
+                    target.style.textDecoration = 'line-through';
+                    target.style.color = '#ef4444';
                 }
             }
         });
-        // 重新显示比对
-        this.showComparison();
     },,
+
+    toggleExamBlank(questionId, blankIndex) {
+        const q = this.examData.questions.find(q => q.id === questionId);
+        const ans = this.examData.answers[questionId];
+        WrongBook.add(q, this.setInfo, ans, [blankIndex]);
+        App.showToast('已标记为错误并加入错题本');
+    },
+
+
 
     showExamScore() {
         if (!this.examData) return;
@@ -393,6 +346,23 @@ const App = {
         `;
         document.getElementById('result-stats').innerHTML = statsHtml;
     }
+
+    checkAnswer(question, answer) {
+        if (question.type === 'single') return question.answer === answer;
+        if (question.type === 'multiple') {
+            const correct = question.answer;
+            const user = Array.isArray(answer) ? answer : [];
+            if (correct.length !== user.length) return false;
+            return correct.every(a => user.includes(a)) && user.every(a => correct.includes(a));
+        }
+        if (question.type === 'judgment') return question.answer === answer;
+        return false;
+    },
+
+    // 显示比对
+,,
+
+
 
 ,
 
