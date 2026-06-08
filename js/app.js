@@ -208,6 +208,7 @@ const App = {
                     earnedPoints += (q.points || 5);
                 } else {
                     wrong++;
+                    WrongBook.add(q, this.setInfo, ans);
                 }
             } else {
                 subjective++;
@@ -229,9 +230,9 @@ const App = {
         // 保存考试数据用于比对
         this.examData = { questions, answers, score, correct, wrong, subjective, total, mins, secs, elapsed, totalPoints, earnedPoints };
 
-        // 先显示比对界面，让用户自行判断主观题
+        // 直接进入比对界面（只显示主观题）
         this.showComparison();
-    },
+    },,
 
     checkAnswer(question, answer) {
         if (question.type === 'single') return question.answer === answer;
@@ -252,34 +253,49 @@ const App = {
         const container = document.getElementById('comparison-section');
 
         let html = '<h3 style="margin-bottom:16px;font-size:20px;">逐题比对</h3>';
-        html += '<div style="margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:8px;font-size:14px;color:#64748b;">请检查主观题的对错，客观题已自动判定。确认无误后点击下方"查看成绩"按钮。</div>';
+        html += '<div style="margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:8px;font-size:14px;color:#64748b;">客观题已自动判定。请检查主观题，未作答的可直接填写，填错的可点击答案标记对错。</div>';
+
+        let hasUnansweredSubjective = false;
 
         questions.forEach((q, idx) => {
             const userAnswer = answers[q.id];
             const isObjective = ['single', 'multiple', 'judgment'].includes(q.type);
 
-            // 客观题自动判定，已在 showResult 中处理，比对界面只显示主观题
+            // 只显示主观题
             if (isObjective) return;
 
+            const isAnswered = q.type === 'fill'
+                ? (Array.isArray(userAnswer) && userAnswer.some(v => v && v.trim() !== ''))
+                : (userAnswer && userAnswer.trim() !== '');
+
+            if (!isAnswered) hasUnansweredSubjective = true;
+
             html += `<div class="comparison-item" id="comp-${q.id}">`;
-            html += `<h4>第 ${idx + 1} 题 [${this.getTypeLabel(q.type)}]</h4>`;
+            html += `<h4>第 ${idx + 1} 题 [${this.getTypeLabel(q.type)}] ${isAnswered ? '' : '<span style="color:#ef4444;">未作答</span>'}</h4>`;
             html += `<div style="margin-bottom:10px;color:#475569;">${QuestionRender.escapeHtml(q.question)}</div>`;
 
             if (q.type === 'fill') {
                 const userVals = Array.isArray(userAnswer) ? userAnswer : [];
                 const correctVals = q.answer || [];
                 for (let i = 0; i < correctVals.length; i++) {
+                    const hasVal = userVals[i] && userVals[i].trim() !== '';
                     html += `<div style="margin-bottom:8px;padding:8px;background:#f8fafc;border-radius:6px;">`;
                     html += `<div style="font-weight:600;font-size:13px;color:#64748b;margin-bottom:4px;">第 ${i+1} 空</div>`;
-                    html += `<div class="comparison-row"><div class="comparison-label">你的答案</div><div class="comparison-value user">${QuestionRender.escapeHtml(userVals[i] || '未填写')}</div></div>`;
+                    if (hasVal) {
+                        html += `<div class="comparison-row"><div class="comparison-label">你的答案</div><div class="comparison-value user"><span class="blank-clickable" onclick="App.toggleExamBlank('${q.id}', ${i})">${QuestionRender.escapeHtml(userVals[i])}</span></div></div>`;
+                    } else {
+                        html += `<div class="comparison-row"><div class="comparison-label">你的答案</div><div class="comparison-value user"><input type="text" class="blank-input" id="exam-blank-${q.id}-${i}" placeholder="填写答案" style="width:120px;"></div></div>`;
+                    }
                     html += `<div class="comparison-row"><div class="comparison-label">正确答案</div><div class="comparison-value answer">${QuestionRender.escapeHtml(correctVals[i])}</div></div>`;
-                    html += `<div class="blank-check"><label><input type="checkbox" onchange="App.markExamBlank('${q.id}', ${i}, this.checked)"> 此空回答正确</label></div>`;
                     html += `</div>`;
                 }
             } else if (q.type === 'essay') {
-                html += `<div class="comparison-row"><div class="comparison-label">你的答案</div><div class="comparison-value user">${QuestionRender.escapeHtml(userAnswer || '未填写')}</div></div>`;
+                if (isAnswered) {
+                    html += `<div class="comparison-row"><div class="comparison-label">你的答案</div><div class="comparison-value user">${QuestionRender.escapeHtml(userAnswer)}</div></div>`;
+                } else {
+                    html += `<div class="comparison-row"><div class="comparison-label">你的答案</div><div class="comparison-value user"><textarea class="essay-textarea" id="exam-essay-${q.id}" placeholder="填写答案" style="min-height:80px;"></textarea></div></div>`;
+                }
                 html += `<div class="comparison-row"><div class="comparison-label">参考答案</div><div class="comparison-value answer">${QuestionRender.escapeHtml(q.answer || '无')}</div></div>`;
-                html += `<div class="blank-check"><label><input type="checkbox" onchange="App.markExamEssay('${q.id}', this.checked)"> 我的回答正确</label></div>`;
             }
 
             if (q.analysis) {
@@ -288,21 +304,78 @@ const App = {
             html += '</div>';
         });
 
-        html += `<div style="text-align:center;margin-top:24px;"><button class="btn-primary" id="exam-score-btn" style="padding:14px 40px;font-size:18px;">查看成绩</button></div>`;
+        if (hasUnansweredSubjective) {
+            html += `<div style="text-align:center;margin-top:24px;"><button class="btn-primary" id="exam-submit-answers" style="padding:14px 40px;font-size:18px;">提交补答</button></div>`;
+        } else {
+            html += `<div style="text-align:center;margin-top:24px;"><button class="btn-primary" id="exam-score-btn" style="padding:14px 40px;font-size:18px;">查看成绩</button></div>`;
+        }
 
         container.innerHTML = html;
         container.scrollIntoView({ behavior: 'smooth' });
 
-        // 使用 setTimeout 确保 DOM 更新后再绑定事件
+        // 绑定事件
         setTimeout(() => {
-            const btn = document.getElementById('exam-score-btn');
-            if (btn) {
-                btn.addEventListener('click', function() {
+            const scoreBtn = document.getElementById('exam-score-btn');
+            if (scoreBtn) {
+                scoreBtn.addEventListener('click', function() {
                     App.showExamScore();
+                });
+            }
+            const submitBtn = document.getElementById('exam-submit-answers');
+            if (submitBtn) {
+                submitBtn.addEventListener('click', function() {
+                    App.submitExamAnswers();
                 });
             }
         }, 10);
     },
+
+
+
+    toggleExamBlank(questionId, blankIndex) {
+        const q = this.examData.questions.find(q => q.id === questionId);
+        const ans = this.examData.answers[questionId];
+        WrongBook.add(q, this.setInfo, ans, [blankIndex]);
+        App.showToast('已标记为错误并加入错题本');
+    },
+
+    toggleExamBlank(questionId, blankIndex) {
+        const q = this.examData.questions.find(q => q.id === questionId);
+        const ans = this.examData.answers[questionId];
+        WrongBook.add(q, this.setInfo, ans, [blankIndex]);
+        App.showToast('已标记为错误并加入错题本');
+    },
+
+        submitExamAnswers() {
+        // 收集补答的答案
+        this.examData.questions.forEach(q => {
+            if (['single', 'multiple', 'judgment'].includes(q.type)) return;
+            if (q.type === 'fill') {
+                const correctVals = q.answer || [];
+                const newVals = [];
+                let hasNew = false;
+                for (let i = 0; i < correctVals.length; i++) {
+                    const input = document.getElementById(`exam-blank-${q.id}-${i}`);
+                    if (input && input.value.trim()) {
+                        newVals[i] = input.value.trim();
+                        hasNew = true;
+                    } else {
+                        newVals[i] = this.examData.answers[q.id] && this.examData.answers[q.id][i] ? this.examData.answers[q.id][i] : '';
+                    }
+                }
+                if (hasNew) {
+                    this.examData.answers[q.id] = newVals;
+                }
+            } else if (q.type === 'essay') {
+                const textarea = document.getElementById(`exam-essay-${q.id}`);
+                if (textarea && textarea.value.trim()) {
+                    this.examData.answers[q.id] = textarea.value.trim();
+                }
+            }
+        });
+        // 重新显示比对
+        this.showComparison();
+    },,
 
     showExamScore() {
         if (!this.examData) return;
@@ -323,23 +396,7 @@ const App = {
 
 ,
 
-    markExamBlank(questionId, blankIndex, checked) {
-        if (!checked) {
-            const q = this.examData.questions.find(q => q.id === questionId);
-            const ans = this.examData.answers[questionId];
-            WrongBook.add(q, this.setInfo, ans, [blankIndex]);
-            App.showToast('已标记为错误并加入错题本');
-        }
-    },
 
-    markExamEssay(questionId, checked) {
-        if (!checked) {
-            const q = this.examData.questions.find(q => q.id === questionId);
-            const ans = this.examData.answers[questionId];
-            WrongBook.add(q, this.setInfo, ans);
-            App.showToast('已标记为错误并加入错题本');
-        }
-    },
 
     formatAnswerDisplay(question, answer) {
         if (answer === null || answer === undefined) return '<span style="color:#94a3b8;">未作答</span>';
@@ -403,6 +460,11 @@ const App = {
         setTimeout(() => toast.classList.remove('show'), 2500);
     }
 };
+
+// 初始化
+document.addEventListener('DOMContentLoaded', () => {
+    App.init();
+});;
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {

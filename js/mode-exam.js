@@ -104,7 +104,7 @@ const ExamMode = {
         if (this.currentIndex < total - 1) {
             html += `<button class="btn-primary" onclick="ExamMode.next()">下一题</button>`;
         } else {
-            html += `<button class="btn-primary" onclick="ExamMode.submit()">交卷</button>`;
+            html += `<button class="btn-primary" onclick="ExamMode.submit()">提交</button>`;
         }
         html += '</div>';
 
@@ -182,10 +182,6 @@ const ExamMode = {
 
     submit() {
         const unanswered = this.questions.filter(q => !this.isAnswered(q));
-        if (unanswered.length > 0) {
-            if (!confirm(`还有 ${unanswered.length} 道题未作答，确定要交卷吗？`)) return;
-        }
-
         this.stopTimer();
         this.submitted = true;
         this.currentIndex = 0;

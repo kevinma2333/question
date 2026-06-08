@@ -328,9 +328,6 @@ const PracticeMode = {
 
         if (hasWrong) {
             WrongBook.add(q, this.setInfo, this.answers[q.id], wrongBlanks);
-            App.showToast('已加入错题本');
-        } else {
-            App.showToast('全部正确，真棒！');
         }
 
         this.next();
