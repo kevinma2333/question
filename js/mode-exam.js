@@ -188,6 +188,165 @@ const ExamMode = {
 
         this.stopTimer();
         this.submitted = true;
+        this.currentIndex = 0;
+        this.comparisonMode = true;
+        this.renderComparison();
+    },
+
+    renderComparison() {
+        const q = this.questions[this.currentIndex];
+        const total = this.questions.length;
+        const current = this.currentIndex + 1;
+
+        document.getElementById('exam-counter').textContent = `比对 ${current} / ${total}`;
+        document.getElementById('exam-timer').textContent = '比对中';
+
+        const container = document.getElementById('exam-question-container');
+        const userAnswer = this.answers[q.id] || null;
+        const isObjective = ['single', 'multiple', 'judgment'].includes(q.type);
+
+        let html = '';
+        if (isObjective) {
+            const isCorrect = this.checkAnswer(q, userAnswer);
+            html = QuestionRender.render(q, {
+                mode: 'review',
+                userAnswer: userAnswer,
+                isCorrect: isCorrect,
+                context: 'exam'
+            });
+            let feedback = '';
+            if (isCorrect) {
+                feedback = `<div class="feedback-box correct"><div class="feedback-title">回答正确</div></div>`;
+            } else {
+                feedback = `<div class="feedback-box wrong"><div class="feedback-title">回答错误</div><div>正确答案：${this.formatAnswer(q)}</div></div>`;
+                // 客观题自动计入错题本
+                WrongBook.add(q, this.setInfo, userAnswer);
+            }
+            if (q.analysis) {
+                feedback += `<div class="analysis-box"><strong>解析：</strong>${QuestionRender.escapeHtml(q.analysis)}</div>`;
+            }
+            html += feedback;
+        } else if (q.type === 'fill') {
+            html = QuestionRender.render(q, {
+                mode: 'comparison',
+                userAnswer: userAnswer,
+                onBlankCheck: 'ExamMode.handleBlankCheck',
+                blankChecks: this.blankChecks[q.id] || {},
+                context: 'exam'
+            });
+            if (q.analysis) {
+                html += `<div class="analysis-box"><strong>解析：</strong>${QuestionRender.escapeHtml(q.analysis)}</div>`;
+            }
+        } else if (q.type === 'essay') {
+            html = QuestionRender.render(q, {
+                mode: 'comparison',
+                userAnswer: userAnswer,
+                onBlankCheck: 'ExamMode.handleEssayCheck',
+                context: 'exam'
+            });
+            if (q.analysis) {
+                html += `<div class="analysis-box"><strong>解析：</strong>${QuestionRender.escapeHtml(q.analysis)}</div>`;
+            }
+        }
+
+        // 导航按钮
+        html += '<div class="practice-actions" style="margin-top:20px;">';
+        if (this.currentIndex > 0) {
+            html += `<button class="btn-secondary" onclick="ExamMode.prevComparison()">上一题</button>`;
+        }
+        if (this.currentIndex < total - 1) {
+            html += `<button class="btn-primary" onclick="ExamMode.nextComparison()">下一题</button>`;
+        } else {
+            html += `<button class="btn-primary" onclick="ExamMode.finishComparison()">完成比对，查看成绩</button>`;
+        }
+        html += '</div>';
+
+        container.innerHTML = html;
+        this.renderSidebar();
+    },
+
+    checkAnswer(question, answer) {
+        if (question.type === 'single') return question.answer === answer;
+        if (question.type === 'multiple') {
+            const correct = question.answer;
+            const user = Array.isArray(answer) ? answer : [];
+            if (correct.length !== user.length) return false;
+            return correct.every(a => user.includes(a)) && user.every(a => correct.includes(a));
+        }
+        if (question.type === 'judgment') return question.answer === answer;
+        return false;
+    },
+
+    formatAnswer(question) {
+        if (question.type === 'single') return question.answer;
+        if (question.type === 'multiple') return question.answer.join(', ');
+        if (question.type === 'judgment') return question.answer ? '正确' : '错误';
+        return '';
+    },
+
+    handleBlankCheck(index, checked) {
+        const q = this.questions[this.currentIndex];
+        if (!this.blankChecks[q.id]) this.blankChecks[q.id] = {};
+        this.blankChecks[q.id][index] = checked;
+    },
+
+    handleEssayCheck(checked) {
+        const q = this.questions[this.currentIndex];
+        if (!this.blankChecks[q.id]) this.blankChecks[q.id] = {};
+        this.blankChecks[q.id][0] = checked;
+    },
+
+    nextComparison() {
+        this.saveCurrentComparison();
+        if (this.currentIndex < this.questions.length - 1) {
+            this.currentIndex++;
+            this.renderComparison();
+        }
+    },
+
+    prevComparison() {
+        this.saveCurrentComparison();
+        if (this.currentIndex > 0) {
+            this.currentIndex--;
+            this.renderComparison();
+        }
+    },
+
+    saveCurrentComparison() {
+        const q = this.questions[this.currentIndex];
+        if (['fill', 'essay'].includes(q.type)) {
+            let hasWrong = false;
+            let wrongBlanks = null;
+
+            if (q.type === 'fill') {
+                const checks = this.blankChecks[q.id] || {};
+                const totalBlanks = q.answer.length;
+                wrongBlanks = [];
+                for (let i = 0; i < totalBlanks; i++) {
+                    if (checks[i] !== true) {
+                        hasWrong = true;
+                        wrongBlanks.push(i);
+                    }
+                }
+                if (Object.keys(checks).length === 0) {
+                    hasWrong = true;
+                    wrongBlanks = Array.from({length: totalBlanks}, (_, i) => i);
+                }
+            } else if (q.type === 'essay') {
+                const checks = this.blankChecks[q.id] || {};
+                if (checks[0] !== true) {
+                    hasWrong = true;
+                }
+            }
+
+            if (hasWrong) {
+                WrongBook.add(q, this.setInfo, this.answers[q.id], wrongBlanks);
+            }
+        }
+    },
+
+    finishComparison() {
+        this.saveCurrentComparison();
         const duration = Math.floor((Date.now() - this.startTime) / 1000);
         this.saveHistory(duration);
         App.showResult(this.questions, this.answers, this.startTime);

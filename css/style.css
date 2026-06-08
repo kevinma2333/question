@@ -1209,3 +1209,72 @@ body {
 .file-upload-text {
     pointer-events: none;
 }
+
+
+/* Danger Card */
+.danger-card {
+    border: 2px solid var(--danger-light);
+}
+
+.danger-card h3 {
+    color: var(--danger);
+}
+
+/* Blank Clickable */
+.blank-clickable {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 80px;
+    padding: 4px 12px;
+    border: 2px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    text-align: center;
+    margin: 0 4px;
+    cursor: pointer;
+    transition: var(--transition);
+    background: #fff;
+    user-select: none;
+}
+
+.blank-clickable:hover {
+    border-color: var(--primary);
+}
+
+.blank-clickable.marked-wrong {
+    border-color: var(--danger);
+    background: var(--danger-light);
+    color: var(--danger);
+    text-decoration: line-through;
+}
+
+.blank-clickable.marked-correct {
+    border-color: var(--success);
+    background: var(--success-light);
+    color: var(--success);
+}
+
+/* Wrong Answers History */
+.wrong-answers-list {
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--gray-50);
+    border-radius: var(--radius-sm);
+}
+
+.wrong-answers-list h5 {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin-bottom: 8px;
+}
+
+.wrong-answer-item {
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    background: #fff;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--gray-600);
+    border-left: 3px solid var(--danger);
+}

@@ -20,6 +20,7 @@ const PracticeMode = {
         this.reviewMode = reviewMode;
         this.shuffle = shuffle;
         this.startTime = Date.now();
+        this.returnCallback = null;
 
         if (prefillAnswer && this.questions.length === 1) {
             const q = this.questions[0];
@@ -327,6 +328,9 @@ const PracticeMode = {
 
         if (hasWrong) {
             WrongBook.add(q, this.setInfo, this.answers[q.id], wrongBlanks);
+            App.showToast('已加入错题本');
+        } else {
+            App.showToast('全部正确，真棒！');
         }
 
         this.next();
@@ -364,11 +368,19 @@ const PracticeMode = {
             this.render();
         } else {
             if (this.reviewMode) {
-                App.goHome();
+                if (this.returnCallback) {
+                    this.returnCallback();
+                } else {
+                    App.goHome();
+                }
             } else {
                 this.saveHistory();
                 App.showToast('练习完成');
-                App.goHome();
+                if (this.returnCallback) {
+                    this.returnCallback();
+                } else {
+                    App.goHome();
+                }
             }
         }
     },

@@ -208,7 +208,6 @@ const App = {
                     earnedPoints += (q.points || 5);
                 } else {
                     wrong++;
-                    WrongBook.add(q, this.setInfo, ans);
                 }
             } else {
                 subjective++;
@@ -227,20 +226,11 @@ const App = {
             Storage.setHistory(history);
         }
 
-        this.switchView('result-view');
-        document.getElementById('score-text').textContent = `${score}分`;
-
-        const statsHtml = `
-            <div class="stat-card"><div class="stat-value">${correct}</div><div class="stat-label">正确</div></div>
-            <div class="stat-card"><div class="stat-value">${wrong}</div><div class="stat-label">错误</div></div>
-            <div class="stat-card"><div class="stat-value">${subjective}</div><div class="stat-label">主观题</div></div>
-            <div class="stat-card"><div class="stat-value">${total}</div><div class="stat-label">总题数</div></div>
-            <div class="stat-card"><div class="stat-value">${mins}分${secs}秒</div><div class="stat-label">用时</div></div>
-        `;
-        document.getElementById('result-stats').innerHTML = statsHtml;
-
         // 保存考试数据用于比对
-        this.examData = { questions, answers };
+        this.examData = { questions, answers, score, correct, wrong, subjective, total, mins, secs, elapsed, totalPoints, earnedPoints };
+
+        // 先显示比对界面，让用户自行判断主观题
+        this.showComparison();
     },
 
     checkAnswer(question, answer) {
@@ -258,10 +248,12 @@ const App = {
     // 显示比对
     showComparison() {
         if (!this.examData) return;
-        const { questions, answers } = this.examData;
+        const { questions, answers, score, correct, wrong, subjective, total, mins, secs } = this.examData;
         const container = document.getElementById('comparison-section');
 
         let html = '<h3 style="margin-bottom:16px;font-size:20px;">逐题比对</h3>';
+        html += '<div style="margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:8px;font-size:14px;color:#64748b;">请检查主观题的对错，客观题已自动判定。确认无误后点击下方"查看成绩"按钮。</div>';
+
         questions.forEach((q, idx) => {
             const userAnswer = answers[q.id];
             const isObjective = ['single', 'multiple', 'judgment'].includes(q.type);
@@ -297,16 +289,35 @@ const App = {
             html += '</div>';
         });
 
+        html += `<div style="text-align:center;margin-top:24px;"><button class="btn-primary" onclick="App.showExamScore()" style="padding:14px 40px;font-size:18px;">查看成绩</button></div>`;
+
         container.innerHTML = html;
         container.scrollIntoView({ behavior: 'smooth' });
     },
 
+    showExamScore() {
+        if (!this.examData) return;
+        const { score, correct, wrong, subjective, total, mins, secs } = this.examData;
+
+        this.switchView('result-view');
+        document.getElementById('score-text').textContent = `${score}分`;
+
+        const statsHtml = `
+            <div class="stat-card"><div class="stat-value">${correct}</div><div class="stat-label">正确</div></div>
+            <div class="stat-card"><div class="stat-value">${wrong}</div><div class="stat-label">错误</div></div>
+            <div class="stat-card"><div class="stat-value">${subjective}</div><div class="stat-label">主观题</div></div>
+            <div class="stat-card"><div class="stat-value">${total}</div><div class="stat-label">总题数</div></div>
+            <div class="stat-card"><div class="stat-value">${mins}分${secs}秒</div><div class="stat-label">用时</div></div>
+        `;
+        document.getElementById('result-stats').innerHTML = statsHtml;
+    },
+
     markExamBlank(questionId, blankIndex, checked) {
-        // 记录用户自评，但不自动加入错题本（让用户自行判断）
         if (!checked) {
             const q = this.examData.questions.find(q => q.id === questionId);
             const ans = this.examData.answers[questionId];
             WrongBook.add(q, this.setInfo, ans, [blankIndex]);
+            App.showToast('已标记为错误并加入错题本');
         }
     },
 
@@ -315,6 +326,7 @@ const App = {
             const q = this.examData.questions.find(q => q.id === questionId);
             const ans = this.examData.answers[questionId];
             WrongBook.add(q, this.setInfo, ans);
+            App.showToast('已标记为错误并加入错题本');
         }
     },
 

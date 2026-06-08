@@ -38,7 +38,7 @@ const QuestionRender = {
                 else if (isSelected && !isCorrect) cls += ' wrong';
             }
             html += `<div class="${cls}" ${!disabled ? `onclick="${handler}.handleObjectiveAnswer('${letter}')"` : ''}>
-                <input type="radio" name="q" ${isSelected ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
+                <input type="radio" name="q" ${isSelected ? 'checked' : ''} ${disabled ? 'disabled' : ''} onclick="event.stopPropagation()">
                 <span>${this.escapeHtml(opt)}</span>
             </div>`;
         });
@@ -64,7 +64,7 @@ const QuestionRender = {
                 else if (isSelected && !isCorrect) cls += ' wrong';
             }
             html += `<div class="${cls}" ${!disabled ? `onclick="${handler}.handleObjectiveAnswer('${letter}')"` : ''}>
-                <input type="checkbox" ${isSelected ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
+                <input type="checkbox" ${isSelected ? 'checked' : ''} ${disabled ? 'disabled' : ''} onclick="event.stopPropagation()">
                 <span>${this.escapeHtml(opt)}</span>
             </div>`;
         });
@@ -124,10 +124,11 @@ const QuestionRender = {
                 const userVal = answers[i] || '';
                 const correctVal = correctAnswers[i] || '';
                 const isBlankCorrect = blankChecks && blankChecks[i] === true;
+                const isBlankWrong = blankChecks && blankChecks[i] === false;
 
                 html += `<div class="blank-check-item" style="margin-bottom:12px;padding:10px;background:#f8fafc;border-radius:8px;">`;
                 html += `<div style="font-weight:600;font-size:14px;color:#64748b;margin-bottom:6px;">第 ${i+1} 空</div>`;
-                html += `<div class="comparison-row"><div class="comparison-label">你的答案</div><div class="comparison-value user">${this.escapeHtml(userVal) || '<span style="color:#94a3b8;">未填写</span>'}</div></div>`;
+                html += `<div class="comparison-row"><div class="comparison-label">你的答案</div><div class="comparison-value user"><span class="blank-clickable ${isBlankWrong ? 'marked-wrong' : isBlankCorrect ? 'marked-correct' : ''}" onclick="${onBlankCheck ? onBlankCheck + '(' + i + ', ' + !isBlankCorrect + ')' : ''}">${this.escapeHtml(userVal) || '<span style="color:#94a3b8;">未填写</span>'}</span></div></div>`;
                 html += `<div class="comparison-row"><div class="comparison-label">正确答案</div><div class="comparison-value answer">${this.escapeHtml(correctVal)}</div></div>`;
 
                 if (onBlankCheck) {

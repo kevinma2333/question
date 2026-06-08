@@ -110,7 +110,6 @@
                 </div>
                 <div class="result-stats" id="result-stats"></div>
                 <div class="result-actions">
-                    <button class="btn-primary" onclick="App.showComparison()">查看比对</button>
                     <button class="btn-secondary" onclick="App.restart()">重新答题</button>
                     <button class="btn-secondary" onclick="App.goHome()">返回首页</button>
                 </div>
@@ -128,6 +127,7 @@
                         <select id="filter-bank" onchange="WrongBook.render()">
                             <option value="">全部题库</option>
                         </select>
+                        <button class="btn-primary" onclick="WrongBook.practiceWrong()">练习错题</button>
                         <button class="btn-danger" onclick="WrongBook.clearAll()">清空错题</button>
                     </div>
                 </div>
@@ -177,6 +177,11 @@
                             <span class="file-upload-text">点击选择文件</span>
                         </div>
                         <input type="file" id="import-file" accept=".json" onchange="Storage.importData(this)" style="display:none">
+                    </div>
+                    <div class="io-card danger-card">
+                        <h3>删除存档</h3>
+                        <p>清除浏览器中所有本地数据</p>
+                        <button class="btn-danger" onclick="Storage.clearAll()">删除存档</button>
                     </div>
                 </div>
             </section>
