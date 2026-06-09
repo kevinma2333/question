@@ -38,7 +38,7 @@ const QuestionRender = {
                 else if (isSelected && !isCorrect) cls += ' wrong';
             }
             html += `<div class="${cls}" ${!disabled ? `onclick="${handler}.handleObjectiveAnswer('${letter}')"` : ''}>
-                <input type="radio" name="q" ${isSelected ? 'checked' : ''} ${disabled ? 'disabled' : ''} onclick="${handler}.handleObjectiveAnswer('${letter}'); event.stopPropagation();">
+                <input type="radio" name="q" ${isSelected ? 'checked' : ''} ${disabled ? 'disabled' : ''} onclick="event.stopPropagation()">
                 <span>${this.escapeHtml(opt)}</span>
             </div>`;
         });
@@ -64,7 +64,7 @@ const QuestionRender = {
                 else if (isSelected && !isCorrect) cls += ' wrong';
             }
             html += `<div class="${cls}" ${!disabled ? `onclick="${handler}.handleObjectiveAnswer('${letter}')"` : ''}>
-                <input type="checkbox" ${isSelected ? 'checked' : ''} ${disabled ? 'disabled' : ''} onclick="${handler}.handleObjectiveAnswer('${letter}'); event.stopPropagation();">
+                <input type="checkbox" ${isSelected ? 'checked' : ''} ${disabled ? 'disabled' : ''} onclick="event.stopPropagation()">
                 <span>${this.escapeHtml(opt)}</span>
             </div>`;
         });

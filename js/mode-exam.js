@@ -85,7 +85,7 @@ const ExamMode = {
         document.getElementById('exam-counter').textContent = `${current} / ${total}`;
 
         const container = document.getElementById('exam-question-container');
-        const userAnswer = this.answers[q.id] !== undefined ? this.answers[q.id] : null;
+        const userAnswer = this.answers[q.id] || null;
 
         let html = QuestionRender.render(q, {
             mode: 'answer',
@@ -163,11 +163,7 @@ const ExamMode = {
 
     jumpTo(index) {
         this.currentIndex = index;
-        if (this.submitted) {
-            this.renderComparison();
-        } else {
-            this.renderQuestion();
-        }
+        this.renderQuestion();
     },
 
     next() {
@@ -186,22 +182,6 @@ const ExamMode = {
 
     submit() {
         const unanswered = this.questions.filter(q => !this.isAnswered(q));
-        if (unanswered.length > 0) {
-            const objectiveUnanswered = unanswered.filter(q => ['single', 'multiple', 'judgment'].includes(q.type));
-            const subjectiveUnanswered = unanswered.filter(q => !['single', 'multiple', 'judgment'].includes(q.type));
-            
-            // 客观题未答的自动给0分（不进入比对）
-            objectiveUnanswered.forEach(q => {
-                this.answers[q.id] = q.type === 'multiple' ? [] : null;
-            });
-            
-            // 如果有主观题未答，提示
-            if (subjectiveUnanswered.length > 0) {
-                if (!confirm(`还有 ${subjectiveUnanswered.length} 道主观题未作答，是否继续提交？`)) {
-                    return;
-                }
-            }
-        }
         this.stopTimer();
         this.submitted = true;
         this.currentIndex = 0;
@@ -210,21 +190,6 @@ const ExamMode = {
     },
 
     renderComparison() {
-        // 跳过客观题，直接显示主观题
-        while (this.currentIndex < this.questions.length) {
-            const q = this.questions[this.currentIndex];
-            if (!['single', 'multiple', 'judgment'].includes(q.type)) {
-                break;
-            }
-            this.currentIndex++;
-        }
-        
-        // 如果所有题都是客观题，直接完成
-        if (this.currentIndex >= this.questions.length) {
-            this.finishComparison();
-            return;
-        }
-        
         const q = this.questions[this.currentIndex];
         const total = this.questions.length;
         const current = this.currentIndex + 1;
@@ -233,10 +198,31 @@ const ExamMode = {
         document.getElementById('exam-timer').textContent = '比对中';
 
         const container = document.getElementById('exam-question-container');
-        const userAnswer = this.answers[q.id] !== undefined ? this.answers[q.id] : null;
+        const userAnswer = this.answers[q.id] || null;
+        const isObjective = ['single', 'multiple', 'judgment'].includes(q.type);
 
         let html = '';
-        if (q.type === 'fill') {
+        if (isObjective) {
+            const isCorrect = this.checkAnswer(q, userAnswer);
+            html = QuestionRender.render(q, {
+                mode: 'review',
+                userAnswer: userAnswer,
+                isCorrect: isCorrect,
+                context: 'exam'
+            });
+            let feedback = '';
+            if (isCorrect) {
+                feedback = `<div class="feedback-box correct"><div class="feedback-title">回答正确</div></div>`;
+            } else {
+                feedback = `<div class="feedback-box wrong"><div class="feedback-title">回答错误</div><div>正确答案：${this.formatAnswer(q)}</div></div>`;
+                // 客观题自动计入错题本
+                WrongBook.add(q, this.setInfo, userAnswer);
+            }
+            if (q.analysis) {
+                feedback += `<div class="analysis-box"><strong>解析：</strong>${QuestionRender.escapeHtml(q.analysis)}</div>`;
+            }
+            html += feedback;
+        } else if (q.type === 'fill') {
             html = QuestionRender.render(q, {
                 mode: 'comparison',
                 userAnswer: userAnswer,
@@ -259,51 +245,13 @@ const ExamMode = {
             }
         }
 
-        // 正确/错误判定按钮（取代下一题按钮）
+        // 导航按钮
         html += '<div class="practice-actions" style="margin-top:20px;">';
         if (this.currentIndex > 0) {
             html += `<button class="btn-secondary" onclick="ExamMode.prevComparison()">上一题</button>`;
         }
-        
-        // 检查用户答案是否和答案完全一致（填空题需要所有空都正确）
-        let isPerfectMatch = false;
-        if (q.type === 'fill') {
-            const userVals = Array.isArray(userAnswer) ? userAnswer : [];
-            const correctVals = q.answer || [];
-            isPerfectMatch = userVals.length === correctVals.length && 
-                userVals.every((v, i) => v && v.trim() === correctVals[i].trim());
-        } else if (q.type === 'essay') {
-            isPerfectMatch = userAnswer && userAnswer.trim() === (q.answer || '').trim();
-        }
-        
-        // 检查是否留空
-        let isBlank = false;
-        if (q.type === 'fill') {
-            const userVals = Array.isArray(userAnswer) ? userAnswer : [];
-            isBlank = userVals.every(v => !v || v.trim() === '');
-        } else if (q.type === 'essay') {
-            isBlank = !userAnswer || userAnswer.trim() === '';
-        }
-        
-        // 如果完全一致，隐藏"错误"按钮；如果留空，隐藏"正确"按钮
-        if (!isPerfectMatch) {
-            html += `<button class="btn-primary" style="background:#ef4444;border-color:#ef4444;" onclick="ExamMode.markSubjective(false)">错误</button>`;
-        }
-        if (!isBlank) {
-            html += `<button class="btn-primary" style="background:#22c55e;border-color:#22c55e;" onclick="ExamMode.markSubjective(true)">正确</button>`;
-        }
-        
-        // 检查后面是否还有主观题
-        let hasNextSubjective = false;
-        for (let i = this.currentIndex + 1; i < this.questions.length; i++) {
-            if (!['single', 'multiple', 'judgment'].includes(this.questions[i].type)) {
-                hasNextSubjective = true;
-                break;
-            }
-        }
-        
-        if (hasNextSubjective) {
-            html += `<button class="btn-secondary" onclick="ExamMode.nextComparison()">跳过</button>`;
+        if (this.currentIndex < total - 1) {
+            html += `<button class="btn-primary" onclick="ExamMode.nextComparison()">下一题</button>`;
         } else {
             html += `<button class="btn-primary" onclick="ExamMode.finishComparison()">完成比对，查看成绩</button>`;
         }
@@ -344,34 +292,20 @@ const ExamMode = {
         this.blankChecks[q.id][0] = checked;
     },
 
-    markSubjective(isCorrect) {
-        const q = this.questions[this.currentIndex];
-        if (!this.blankChecks[q.id]) this.blankChecks[q.id] = {};
-        if (q.type === 'fill') {
-            const totalBlanks = q.answer.length;
-            for (let i = 0; i < totalBlanks; i++) {
-                this.blankChecks[q.id][i] = isCorrect;
-            }
-        } else if (q.type === 'essay') {
-            this.blankChecks[q.id][0] = isCorrect;
-        }
-        // 如果不正确，加入错题本
-        if (!isCorrect) {
-            WrongBook.add(q, this.setInfo, this.answers[q.id]);
-        }
-        this.nextComparison();
-    },
-
     nextComparison() {
         this.saveCurrentComparison();
-        this.currentIndex++;
-        this.renderComparison();
+        if (this.currentIndex < this.questions.length - 1) {
+            this.currentIndex++;
+            this.renderComparison();
+        }
     },
 
     prevComparison() {
         this.saveCurrentComparison();
-        this.currentIndex--;
-        this.renderComparison();
+        if (this.currentIndex > 0) {
+            this.currentIndex--;
+            this.renderComparison();
+        }
     },
 
     saveCurrentComparison() {
@@ -427,8 +361,29 @@ const ExamMode = {
             setName: this.setInfo.setName,
             total: this.questions.length,
             shuffle: true,
-            duration: duration
+            duration: duration,
+            questions: this.questions,
+            answers: this.answers,
+            blankChecks: this.blankChecks,
+            score: this.calculateScore()
         };
         History.add(record);
+    }
+
+    calculateScore() {
+        let correct = 0;
+        let totalPoints = 0;
+        let earnedPoints = 0;
+        this.questions.forEach(q => {
+            totalPoints += (q.points || 5);
+            const ans = this.answers[q.id];
+            if (['single', 'multiple', 'judgment'].includes(q.type)) {
+                if (this.checkAnswer(q, ans)) {
+                    correct++;
+                    earnedPoints += (q.points || 5);
+                }
+            }
+        });
+        return Math.round((earnedPoints / totalPoints) * 100);
     }
 };

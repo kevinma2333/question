@@ -53,7 +53,7 @@ const PracticeMode = {
         document.getElementById('practice-type-tag').textContent = this.getTypeLabel(q.type);
         document.getElementById('practice-progress').style.width = `${(current / total) * 100}%`;
 
-        const userAnswer = this.answers[q.id] !== undefined ? this.answers[q.id] : null;
+        const userAnswer = this.answers[q.id] || null;
         const isAnswered = q.type === 'multiple'
             ? (Array.isArray(userAnswer) && userAnswer.length > 0)
             : (userAnswer !== null && userAnswer !== undefined && userAnswer !== '');
@@ -394,7 +394,10 @@ const PracticeMode = {
             setId: this.setInfo.setId,
             setName: this.setInfo.setName,
             total: this.questions.length,
-            shuffle: !!this.shuffle
+            shuffle: !!this.shuffle,
+            questions: this.questions,
+            answers: this.answers,
+            blankChecks: this.blankChecks
         };
         History.add(record);
     },
