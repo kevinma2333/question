@@ -293,8 +293,8 @@ const App = {
 
         container.innerHTML = html;
         container.scrollIntoView({ behavior: 'smooth' });
+
         // 事件委托：处理 blank-clickable 点击标记错误
-        // 使用标志位避免重复绑定
         if (!container._hasClickListener) {
             container._hasClickListener = true;
             container.addEventListener('click', (e) => {

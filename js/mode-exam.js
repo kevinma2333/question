@@ -293,23 +293,13 @@ const ExamMode = {
             html += `<button class="btn-primary" style="background:#22c55e;border-color:#22c55e;" onclick="ExamMode.markSubjective(true)">正确</button>`;
         }
 
-        // 检查后面是否还有主观题
-        let hasNextSubjective = false;
-        for (let i = this.currentIndex + 1; i < this.questions.length; i++) {
-            if (!['single', 'multiple', 'judgment'].includes(this.questions[i].type)) {
-                hasNextSubjective = true;
-                break;
-            }
-        }
-
-        if (hasNextSubjective) {
-            html += `<button class="btn-secondary" onclick="ExamMode.nextComparison()">跳过</button>`;
-        } else {
-            html += `<button class="btn-primary" onclick="ExamMode.finishComparison()">完成比对，查看成绩</button>`;
-        }
         html += '</div>';
 
         container.innerHTML = html;
+
+        // 移除考试模式比对界面的"我的回答正确"复选框
+        container.querySelectorAll('.blank-check').forEach(el => el.remove());
+
         this.renderSidebar();
     },
 
@@ -404,7 +394,21 @@ const ExamMode = {
         if (!isCorrect) {
             WrongBook.add(q, this.setInfo, this.answers[q.id]);
         }
-        this.nextComparison();
+
+        // 检查后面是否还有主观题，有则下一题，没有则直接完成并跳转成绩
+        let hasNextSubjective = false;
+        for (let i = this.currentIndex + 1; i < this.questions.length; i++) {
+            if (!['single', 'multiple', 'judgment'].includes(this.questions[i].type)) {
+                hasNextSubjective = true;
+                break;
+            }
+        }
+
+        if (hasNextSubjective) {
+            this.nextComparison();
+        } else {
+            this.finishComparison();
+        }
     },
 
     finishComparison() {
