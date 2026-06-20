@@ -99,22 +99,39 @@ const PracticeMode = {
             }
         }
 
-        // 渲染题目
-        let html = QuestionRender.render(q, {
-            mode: 'answer',
-            userAnswer: userAnswer,
-            onAnswer: isObjective ? 'PracticeMode.handleObjectiveAnswer' : 'PracticeMode.handleSubjectiveInput',
-            context: 'practice'
-        });
-        this.container.innerHTML = html;
+        // 如果已经答过且是客观题，直接显示 review 模式（带答案和反馈）
+        if (isAnswered && isObjective) {
+            const isCorrect = this.checkAnswer(q, userAnswer);
+            let html = QuestionRender.render(q, {
+                mode: 'review',
+                userAnswer: userAnswer,
+                isCorrect: isCorrect,
+                context: 'practice'
+            });
+            let feedback = '';
+            if (isCorrect) {
+                feedback = `<div class="feedback-box correct"><div class="feedback-title">回答正确</div></div>`;
+            } else {
+                feedback = `<div class="feedback-box wrong"><div class="feedback-title">回答错误</div><div>正确答案：${this.formatAnswer(q)}</div></div>`;
+            }
+            if (q.analysis) {
+                feedback += `<div class="analysis-box"><strong>解析：</strong>${QuestionRender.escapeHtml(q.analysis)}</div>`;
+            }
+            this.container.innerHTML = html + feedback;
+        } else {
+            // 未答题或主观题，正常渲染
+            let html = QuestionRender.render(q, {
+                mode: 'answer',
+                userAnswer: userAnswer,
+                onAnswer: isObjective ? 'PracticeMode.handleObjectiveAnswer' : 'PracticeMode.handleSubjectiveInput',
+                context: 'practice'
+            });
+            this.container.innerHTML = html;
 
-        // 绑定事件
-        if (!isObjective) {
-            this.bindSubjectiveEvents(q);
-        }
-        // 客观题已经通过 onclick 绑定，但需要确保事件能触发
-        if (isObjective && q.type !== 'multiple') {
-            // 单选和判断题点击选项后直接处理，不需要额外绑定
+            // 绑定事件
+            if (!isObjective) {
+                this.bindSubjectiveEvents(q);
+            }
         }
 
         // 渲染操作按钮
