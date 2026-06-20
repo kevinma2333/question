@@ -100,7 +100,9 @@ const PracticeMode = {
         }
 
         // 如果已经答过且是客观题，直接显示 review 模式（带答案和反馈）
-        if (isAnswered && isObjective) {
+        // 多选题除外：多选题需要点击"提交答案"后才显示 review 模式
+        const isMultipleSubmitted = q.type === 'multiple' && this.multipleSubmitted && this.multipleSubmitted[q.id];
+        if (isAnswered && isObjective && (q.type !== 'multiple' || isMultipleSubmitted)) {
             const isCorrect = this.checkAnswer(q, userAnswer);
             let html = QuestionRender.render(q, {
                 mode: 'review',
@@ -181,7 +183,8 @@ const PracticeMode = {
                 current = [...current, answer];
             }
             this.answers[q.id] = current;
-            this.render();
+            // 只重新渲染题目（更新选中状态），不显示答案
+            this.renderMultipleSelection(q, current);
             return;
         }
 
@@ -222,6 +225,22 @@ const PracticeMode = {
         }
     },
 
+    renderMultipleSelection(q, selected) {
+        // 只更新多选题的选中状态，不显示答案/反馈
+        let html = QuestionRender.render(q, {
+            mode: 'answer',
+            userAnswer: selected,
+            onAnswer: 'PracticeMode.handleObjectiveAnswer',
+            context: 'practice'
+        });
+        this.container.innerHTML = html;
+
+        // 重新绑定事件（因为重新渲染了）
+        // 渲染操作按钮（提交答案）
+        const isAnswered = Array.isArray(selected) && selected.length > 0;
+        this.renderActions(q, isAnswered, true);
+    },
+
     submitMultiple() {
         const q = this.questions[this.currentIndex];
         const answer = this.answers[q.id] || [];
@@ -229,6 +248,9 @@ const PracticeMode = {
             App.showToast('请至少选择一个选项');
             return;
         }
+        // 标记此多选题已提交
+        if (!this.multipleSubmitted) this.multipleSubmitted = {};
+        this.multipleSubmitted[q.id] = true;
         const isCorrect = this.checkAnswer(q, answer);
 
         // 重新渲染显示结果
