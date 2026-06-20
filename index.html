@@ -6,54 +6,14 @@
     <title>在线刷题系统</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* Toggle Switch - 统一风格 */
-        .shuffle-toggle {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            margin-top: 12px;
-            padding: 6px 0;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .shuffle-toggle input {
-            display: none;
-        }
-        .shuffle-toggle .toggle-track {
-            width: 44px;
-            height: 24px;
-            background: #e2e8f0;
-            border-radius: 12px;
-            position: relative;
-            transition: background 0.3s ease;
-            flex-shrink: 0;
-        }
-        .shuffle-toggle .toggle-thumb {
-            width: 20px;
-            height: 20px;
-            background: #fff;
-            border-radius: 50%;
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            transition: transform 0.3s ease;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-        }
-        .shuffle-toggle input:checked + .toggle-track {
-            background: #3b82f6;
-        }
-        .shuffle-toggle input:checked + .toggle-track .toggle-thumb {
-            transform: translateX(20px);
-        }
-        .shuffle-toggle .toggle-text {
-            font-size: 14px;
-            color: #64748b;
-            user-select: none;
-        }
-        .shuffle-toggle input:checked ~ .toggle-text {
-            color: #3b82f6;
-            font-weight: 500;
-        }
+        .shuffle-toggle{display:inline-flex;align-items:center;gap:10px;cursor:pointer;margin-top:12px;padding:6px 0;-webkit-tap-highlight-color:transparent}
+        .shuffle-toggle input{display:none}
+        .shuffle-toggle .toggle-track{width:44px;height:24px;background:#e2e8f0;border-radius:12px;position:relative;transition:background .3s;flex-shrink:0}
+        .shuffle-toggle .toggle-thumb{width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:transform .3s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+        .shuffle-toggle input:checked+.toggle-track{background:#3b82f6}
+        .shuffle-toggle input:checked+.toggle-track .toggle-thumb{transform:translateX(20px)}
+        .shuffle-toggle .toggle-text{font-size:14px;color:#64748b;user-select:none}
+        .shuffle-toggle input:checked~.toggle-text{color:#3b82f6;font-weight:500}
     </style>
 </head>
 <body>
@@ -109,9 +69,10 @@
                         <div class="mode-icon practice-icon"></div>
                         <h3>练习模式</h3>
                         <p>逐题作答，即时反馈</p>
-                        <label class="shuffle-label">
+                                                <label class="shuffle-toggle" onclick="event.stopPropagation()">
                             <input type="checkbox" id="practice-shuffle">
-                            <span>打乱题目顺序</span>
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <span class="toggle-text">打乱题目顺序</span>
                         </label>
                     </div>
                     <div class="mode-card" onclick="App.startExam()">
