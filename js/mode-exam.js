@@ -368,7 +368,7 @@ const ExamMode = {
             score: this.calculateScore()
         };
         History.add(record);
-    }
+    },
 
     calculateScore() {
         let correct = 0;

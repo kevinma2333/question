@@ -385,7 +385,7 @@ const App = {
         this.updateBreadcrumb();
         History.render();
         this.switchView('history-view');
-    }
+    },
 
     showHistoryDetail() {
         this.switchView('history-detail-view');
