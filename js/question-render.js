@@ -128,7 +128,7 @@ const QuestionRender = {
 
                 html += `<div class="blank-check-item" style="margin-bottom:12px;padding:10px;background:#f8fafc;border-radius:8px;">`;
                 html += `<div style="font-weight:600;font-size:14px;color:#64748b;margin-bottom:6px;">第 ${i+1} 空</div>`;
-                html += `<div class="comparison-row"><div class="comparison-label">你的答案</div><div class="comparison-value user"><span class="blank-clickable ${isBlankWrong ? 'marked-wrong' : isBlankCorrect ? 'marked-correct' : ''}" onclick="${onBlankCheck ? onBlankCheck + '(' + i + ', ' + !isBlankCorrect + ')' : ''}">${this.escapeHtml(userVal) || '<span style="color:#94a3b8;">未填写</span>'}</span></div></div>`;
+                html += `<div class="comparison-row"><div class="comparison-label">你的答案</div><div class="comparison-value answer ${isBlankWrong ? 'marked-wrong' : isBlankCorrect ? 'marked-correct' : ''}">${this.escapeHtml(userVal) || '<span style="color:#94a3b8;">未填写</span>'}</div></div>`;
                 html += `<div class="comparison-row"><div class="comparison-label">正确答案</div><div class="comparison-value answer">${this.escapeHtml(correctVal)}</div></div>`;
 
                 if (onBlankCheck) {
