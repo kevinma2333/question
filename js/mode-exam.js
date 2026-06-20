@@ -451,9 +451,12 @@ const ExamMode = {
     }
 };
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     }
 };
 >>>>>>> parent of c63b52d (修bug 加功能)
+=======
+>>>>>>> parent of 4a4d733 (修bug)
 =======
 >>>>>>> parent of 4a4d733 (修bug)
