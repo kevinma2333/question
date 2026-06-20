@@ -266,13 +266,12 @@ const PracticeMode = {
     submitSubjective() {
         const q = this.questions[this.currentIndex];
         this.handleSubjectiveInput();
+        const userAnswer = this.answers[q.id];
 
-        // 显示比对界面
+        // 显示比对界面（和考试模式相同样式，不传 onBlankCheck）
         let html = QuestionRender.render(q, {
             mode: 'comparison',
-            userAnswer: this.answers[q.id],
-            onBlankCheck: 'PracticeMode.handleBlankCheck',
-            blankChecks: this.blankChecks[q.id] || {},
+            userAnswer: userAnswer,
             context: 'practice'
         });
         this.container.innerHTML = html;
@@ -281,8 +280,38 @@ const PracticeMode = {
             this.container.innerHTML += `<div class="analysis-box"><strong>解析：</strong>${QuestionRender.escapeHtml(q.analysis)}</div>`;
         }
 
-        // 按钮变为"确认并继续"
-        this.actions.innerHTML = `<button class="btn-primary" onclick="PracticeMode.confirmSubjective()">确认并继续</button>`;
+        // 和考试模式相同的正确/错误判定按钮
+        let btnHtml = '<div class="practice-actions" style="margin-top:20px;">';
+
+        // 检查用户答案是否和答案完全一致
+        let isPerfectMatch = false;
+        if (q.type === 'fill') {
+            const userVals = Array.isArray(userAnswer) ? userAnswer : [];
+            const correctVals = q.answer || [];
+            isPerfectMatch = userVals.length === correctVals.length && 
+                userVals.every((v, i) => v && v.trim() === correctVals[i].trim());
+        } else if (q.type === 'essay') {
+            isPerfectMatch = userAnswer && userAnswer.trim() === (q.answer || '').trim();
+        }
+
+        // 检查是否留空
+        let isBlank = false;
+        if (q.type === 'fill') {
+            const userVals = Array.isArray(userAnswer) ? userAnswer : [];
+            isBlank = userVals.every(v => !v || v.trim() === '');
+        } else if (q.type === 'essay') {
+            isBlank = !userAnswer || userAnswer.trim() === '';
+        }
+
+        // 如果完全一致，隐藏"错误"按钮；如果留空，隐藏"正确"按钮
+        if (!isPerfectMatch) {
+            btnHtml += `<button class="btn-primary" style="background:#ef4444;border-color:#ef4444;" onclick="PracticeMode.markSubjective(false)">错误</button>`;
+        }
+        if (!isBlank) {
+            btnHtml += `<button class="btn-primary" style="background:#22c55e;border-color:#22c55e;" onclick="PracticeMode.markSubjective(true)">正确</button>`;
+        }
+        btnHtml += '</div>';
+        this.actions.innerHTML = btnHtml;
     },
 
     handleBlankCheck(index, checked) {
@@ -295,6 +324,19 @@ const PracticeMode = {
         const q = this.questions[this.currentIndex];
         if (!this.blankChecks[q.id]) this.blankChecks[q.id] = {};
         this.blankChecks[q.id][0] = checked;
+    },
+
+    markSubjective(isCorrect) {
+        const q = this.questions[this.currentIndex];
+        // 如果不正确，加入错题本
+        if (!isCorrect) {
+            let wrongBlanks = null;
+            if (q.type === 'fill') {
+                wrongBlanks = Array.from({length: q.answer.length}, (_, i) => i);
+            }
+            WrongBook.add(q, this.setInfo, this.answers[q.id], wrongBlanks);
+        }
+        this.next();
     },
 
     confirmSubjective() {
