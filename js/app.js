@@ -293,23 +293,26 @@ const App = {
 
         container.innerHTML = html;
         container.scrollIntoView({ behavior: 'smooth' });
-
         // 事件委托：处理 blank-clickable 点击标记错误
-        container.addEventListener('click', (e) => {
-            const target = e.target.closest('[data-action="mark-wrong"]');
-            if (target) {
-                const item = target.closest('.comparison-item');
-                const blankItem = target.closest('.blank-check-item');
-                if (item && blankItem) {
-                    const qid = item.dataset.qid;
-                    const blankIdx = parseInt(blankItem.dataset.blankidx);
-                    this.toggleExamBlank(qid, blankIdx);
-                    target.classList.add('marked-wrong');
-                    target.style.textDecoration = 'line-through';
-                    target.style.color = '#ef4444';
+        // 使用标志位避免重复绑定
+        if (!container._hasClickListener) {
+            container._hasClickListener = true;
+            container.addEventListener('click', (e) => {
+                const target = e.target.closest('[data-action="mark-wrong"]');
+                if (target) {
+                    const item = target.closest('.comparison-item');
+                    const blankItem = target.closest('.blank-check-item');
+                    if (item && blankItem) {
+                        const qid = item.dataset.qid;
+                        const blankIdx = parseInt(blankItem.dataset.blankidx);
+                        this.toggleExamBlank(qid, blankIdx);
+                        target.classList.add('marked-wrong');
+                        target.style.textDecoration = 'line-through';
+                        target.style.color = '#ef4444';
+                    }
                 }
-            }
-        });
+            });
+        }
 
         // 直接显示成绩
         this.showExamScore();
@@ -378,13 +381,10 @@ const App = {
         this.updateBreadcrumb();
         History.render();
         this.switchView('history-view');
-<<<<<<< HEAD
     },
 
     showHistoryDetail() {
         this.switchView('history-detail-view');
-=======
->>>>>>> parent of c63b52d (修bug 加功能)
     },
 
     // 导入导出
